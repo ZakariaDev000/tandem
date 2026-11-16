@@ -8,6 +8,19 @@ export const HOME = { claude: { x: 64, y: 66 }, chatgpt: { x: 192, y: 66 }, user
 // Par où un agent quitte et regagne son bureau, pour ne pas le traverser.
 export const EXIT = { claude: { x: 100, y: 66 }, chatgpt: { x: 156, y: 66 } };
 
+// La table de réunion, contre le mur sous la fenêtre, entre les deux allées : les agents s'y
+// assoient côte à côte, chacun du côté de son bureau. Elle s'arrête au-dessus de la rangée où
+// l'on se croise pour se parler, et laisse le tapis libre.
+export const TABLE = { x: 128, y: 60, seats: { claude: { x: 119, y: 60 }, chatgpt: { x: 137, y: 60 } } };
+
+// Jusqu'où descendre en quittant les meubles pour être sur le plancher libre.
+export const AISLE_Y = 92;
+
+// Les pauses : la machine à café, à côté de laquelle on se tient, et un coin de fenêtre pour chacun.
+// On va au café en passant assez bas pour ne pas frôler le bureau de droite.
+export const COFFEE = { x: 228, y: 60, aisleY: 104 };
+export const WINDOW = { claude: { x: 104, y: 58 }, chatgpt: { x: 152, y: 58 } };
+
 // Où se placer pour parler à quelqu'un, selon qui vient.
 export const MEET = {
   claude: { chatgpt: { x: 152, y: 92 }, user: { x: 112, y: 126 } },

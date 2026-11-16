@@ -1,10 +1,13 @@
-// Le décor du bureau : la pièce, puis les bureaux et les chaises des agents.
-import { HOME, SCENE } from './layout.js';
+// Le décor du bureau : la pièce, puis les bureaux et les chaises des agents, et la table de réunion.
+import { HOME, SCENE, TABLE } from './layout.js';
 import { PALETTES } from './sprites.js';
 
 const { width: W, height: H } = SCENE;
 
 const WOOD = '#6b4a2e';
+// Le mur et le parquet : l'aperçu des personnages les reprend, pour juger d'une couleur sur le vrai décor.
+export const WALL = '#efe2c8';
+export const FLOOR = '#c9a06b';
 const NIGHT = '#27304f';
 const BOOKS = ['#d9643a', '#2f4a7a', '#e7a13a', '#1f8f7d', '#7d5a8c', '#b3372b', '#55606e'];
 const STARS = [[110, 13], [121, 22], [131, 11], [116, 30], [145, 27]];
@@ -17,12 +20,12 @@ function skyColor(hour) {
 
 function drawRoom(p) {
   // Mur
-  p.rect(0, 0, W, 54, '#efe2c8');
+  p.rect(0, 0, W, 54, WALL);
   p.rect(0, 42, W, 10, '#e4d3b2');
   p.rect(0, 41, W, 1, '#d2bf9b');
   p.rect(0, 52, W, 2, '#8a6a4a');
   // Parquet
-  p.rect(0, 54, W, H - 54, '#c9a06b');
+  p.rect(0, 54, W, H - 54, FLOOR);
   for (let y = 54, n = 0; y < H; y += 9, n++) {
     p.rect(0, y, W, 1, '#b58c58');
     for (let x = (n % 2) * 20 - 6; x < W; x += 40) p.rect(x, y + 1, 1, 8, '#b58c58');
@@ -154,4 +157,30 @@ export function drawChair(p, id) {
   const { x: sx, y: sy } = HOME[id];
   p.rect(sx - 6, sy - 13, 12, 10, '#5a4a40');
   p.rect(sx - 5, sy - 12, 10, 8, '#6f5d51');
+}
+
+function drawLaptop(p, seat, accent, now) {
+  // Vu de dos : la lueur de l'écran dépasse du capot et clignote, comme un écran de bureau qui défile.
+  const tick = Math.floor(now / 160);
+  p.rect(seat.x - 4, seat.y - 8, 8, 1, '#e8f6ff');
+  p.rect(seat.x - 4 + (tick % 7), seat.y - 8, 2, 1, accent);
+  p.rect(seat.x - 4, seat.y - 7, 8, 4, '#3b3430');
+  p.rect(seat.x - 1, seat.y - 6, 2, 2, accent);
+  p.rect(seat.x - 5, seat.y - 3, 10, 1, '#2b2420');
+}
+
+/** La table de réunion. `guests` : les agents qui y travaillent, chacun devant son portable ouvert. */
+export function drawTable(p, guests, now) {
+  const { x, y } = TABLE;
+  // Plateau, ceinture et pieds : on voit le parquet entre les pieds, contrairement aux bureaux.
+  p.rect(x - 18, y - 4, 36, 8, '#9c6a3a');
+  p.rect(x - 18, y - 4, 36, 1, '#b98450');
+  p.rect(x - 17, y + 4, 34, 2, '#75491f');
+  p.rect(x - 16, y + 6, 3, 10, '#6f4824');
+  p.rect(x + 13, y + 6, 3, 10, '#6f4824');
+  // Quelques feuilles laissées au milieu
+  p.rect(x - 3, y - 2, 6, 4, '#f6efe2');
+  p.rect(x - 2, y - 1, 4, 1, '#cdbda3');
+  p.rect(x - 2, y + 1, 3, 1, '#cdbda3');
+  for (const id of guests) drawLaptop(p, TABLE.seats[id], PALETTES[id].c, now);
 }

@@ -24,6 +24,7 @@ import { createRoomAlerts } from './notify/room-alerts.js';
 import { initNotifySettings } from './notify/settings.js';
 import { createUnread } from './unread.js';
 import { createUpdateUi } from './update.js';
+import { createLooksDialog } from './looks-dialog.js';
 
 translatePage();
 initTheme();
@@ -43,6 +44,7 @@ const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
 const notifier = createNotifier({ isWatching: unread.isWatching, onOpen: (id) => store.has(id) && select(id) });
 const alerts = createRoomAlerts({ store, notify: notifier.notify });
 initNotifySettings({ notifier });
+const looks = createLooksDialog({ onChange: (all) => office.setLooks(all) });
 
 /** Dans le bureau, travaillent les agents qui répondent dans le salon affiché : un seul, ou les deux en parallèle. */
 function syncOffice() {
@@ -87,6 +89,9 @@ office.onPick((id) => {
   composer.toggleTarget(id);
   composer.focus();
 });
+
+// Cliquer son propre personnage ouvre la fenêtre pour changer d'apparence.
+office.onPickUser((id) => looks.open(id));
 
 subscribe({
   // Envoyé à chaque connexion, donc aussi après une coupure : on repart de la liste complète.

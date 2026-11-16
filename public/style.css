@@ -220,7 +220,7 @@ body {
 }
 .tag.claude { background: var(--claude); }
 .tag.chatgpt { background: var(--chatgpt); }
-.tag.user { background: var(--user); cursor: default; }
+.tag.user { background: var(--user); }
 .tag.target { box-shadow: 0 0 0 3px var(--accent); }
 
 .bubble {
@@ -266,6 +266,11 @@ body {
   box-shadow: none;
 }
 .bubble.work::after { display: none; }
+/* À la table de réunion, les étiquettes des deux voisins s'écartent l'une de l'autre. */
+.tag.side-left { transform: translate(-72%, -100%); }
+.tag.side-right { transform: translate(-28%, -100%); }
+.bubble.work.side-left { transform: translate(calc(-100% + 16px), -100%); }
+.bubble.work.side-right { transform: translate(-16px, -100%); }
 
 /* ---------- Chat ---------- */
 .chat {
@@ -419,8 +424,8 @@ a.chip:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink
 .chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip-size { flex: none; color: var(--ink-2); }
 .chip .btn { padding: 2px 6px; }
-.chip-bar { position: absolute; left: 0; bottom: 0; height: 4px; background: #e7a13a; }
-.drop-hint { margin: 0; padding: 8px; border: 2px dashed var(--ink); background: #fbe9c7; font: 12px var(--mono); text-align: center; }
+.chip-bar { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); }
+.drop-hint { margin: 0; padding: 8px; border: 2px dashed var(--ink); background: var(--notice-bg); font: 12px var(--mono); text-align: center; }
 .thread.dropping { outline: 3px dashed var(--ink); outline-offset: -8px; background: var(--paper); }
 .composer .error { margin: 0; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -451,11 +456,11 @@ legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
 
 /* ---------- Fichiers changés pendant un tour ---------- */
 .changes-open { margin-top: 6px; }
-.lines-plus { color: #1f6b34; }
+.lines-plus { color: var(--ok-ink); }
 .lines-minus { color: var(--danger); }
 #changes-dialog { width: min(960px, calc(100vw - 32px)); }
 #changes-summary { font-family: var(--mono); }
-.changes-files { max-height: calc(100vh - 260px); overflow-y: auto; border: 2px solid var(--ink); background: #fff; }
+.changes-files { max-height: calc(100vh - 260px); overflow-y: auto; border: 2px solid var(--ink); background: var(--field); }
 .change + .change { border-top: 2px solid var(--line); }
 .change summary { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; font: 12px var(--mono); cursor: pointer; list-style: none; }
 .change summary::-webkit-details-marker { display: none; }
@@ -463,7 +468,7 @@ legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
 .change[open] summary { background: var(--paper); border-bottom: 2px solid var(--line); }
 .change[open] summary::before { content: "▾"; }
 .change-status { flex: none; padding: 0 5px; border: 2px solid currentColor; font-size: 10px; text-transform: uppercase; color: var(--ink-2); }
-.change-status.added { color: #1f6b34; }
+.change-status.added { color: var(--ok-ink); }
 .change-status.deleted { color: var(--danger); }
 .change-path { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .change-body { overflow-x: auto; }
@@ -473,11 +478,32 @@ legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
 .diff .ln { width: 1%; text-align: right; color: var(--ink-3); user-select: none; }
 .diff .sign { width: 1%; padding: 0 2px; font-weight: 600; user-select: none; }
 .diff .code { tab-size: 4; }
-.diff .add { background: #e2f4e6; }
-.diff .add .sign { color: #1f6b34; }
-.diff .del { background: #fbe1dc; }
+.diff .add { background: var(--ok-bg); }
+.diff .add .sign { color: var(--ok-ink); }
+.diff .del { background: color-mix(in srgb, var(--danger) 16%, transparent); }
 .diff .del .sign { color: var(--danger); }
 .diff .wide { padding: 2px 8px; font-size: 11px; color: var(--ink-3); background: var(--paper); }
+
+/* ---------- Fenêtre « Personnages » ---------- */
+.looks-open { margin-top: -6px; }
+.looks-open:hover { color: var(--ink); }
+.looks-who { display: flex; margin-bottom: 14px; }
+.looks-who button { font: 12px var(--mono); padding: 4px 10px; border: 2px solid var(--ink); margin-right: -2px; background: var(--card); color: var(--ink-2); cursor: pointer; }
+.looks-who button[aria-checked="true"] { background: var(--ink); color: var(--card); }
+.looks-who button.claude[aria-checked="true"] { background: var(--claude); }
+.looks-who button.chatgpt[aria-checked="true"] { background: var(--chatgpt); }
+.looks-who button.user[aria-checked="true"] { background: var(--user); }
+.looks-body { display: flex; gap: 16px; align-items: flex-start; }
+.looks-preview { flex: none; width: 100px; height: 120px; border: 2px solid var(--ink); image-rendering: pixelated; }
+.looks-fields { flex: 1; min-width: 0; }
+.looks-fields select { display: block; margin-top: 4px; font: 13px var(--sans); padding: 4px 6px; border: 2px solid var(--ink); background: var(--field); color: var(--ink); border-radius: 0; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatches legend { width: 100%; }
+.swatches label { position: relative; display: block; margin: 0; cursor: pointer; }
+.swatches input { position: absolute; opacity: 0; width: 0; height: 0; }
+.swatches span { display: block; width: 22px; height: 22px; border: 2px solid var(--ink); }
+.swatches input:checked + span { box-shadow: 0 0 0 3px var(--accent); }
+.swatches input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 @media (max-width: 980px) {
   body { height: auto; min-height: 100%; }

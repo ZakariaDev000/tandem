@@ -1,12 +1,16 @@
 // Le bureau de Tandem : une petite scène en pixels dessinée à la main dans un canvas.
 // Trois personnages : Claude et ChatGPT à leur bureau, la personne sur le tapis.
-import { AGENT_IDS, BOTH, PARTICIPANT_IDS } from '../participants.js';
-import { advance, carryMessage, createActor, goHome, isAtWork, isSpeaking, meetingSpot, sendHome, setWorkState } from './actors.js';
+// Ici, seulement la boucle d'animation et de quoi piloter la scène ; director.js décide
+// des déplacements, frame.js dessine, looks.js dit à quoi ressemble chacun.
+import { AGENT_IDS, BOTH, isAgent, PARTICIPANT_IDS, USER } from '../participants.js';
 import { bubbleText, createBubbles } from './bubbles.js';
-import { drawCharacter } from './characters.js';
+import { createDirector } from './director.js';
+import { drawFrame } from './frame.js';
 import { HOME, SCENE } from './layout.js';
+import { costumeOf, defaultLooks } from './looks.js';
 import { createPainter } from './painter.js';
-import { drawBackground, drawChair, drawDesk } from './scene.js';
+
+const dress = (looks) => Object.fromEntries(PARTICIPANT_IDS.map((id) => [id, costumeOf(id, looks[id])]));
 
 const MAX_FRAME_SECONDS = 0.1; // un onglet resté en arrière-plan ne fait pas bondir les personnages
 
@@ -18,40 +22,32 @@ export function createOffice(canvas, overlay) {
   const painter = createPainter(canvas.getContext('2d'));
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let pick = () => {};
+  let pickUser = () => {};
   let target = BOTH;
+  let costumes = dress(defaultLooks());
 
-  const actors = Object.fromEntries(PARTICIPANT_IDS.map((id) => [id, createActor(id)]));
-  const cast = Object.values(actors);
-  const bubbles = createBubbles(overlay, PARTICIPANT_IDS, { onPick: (id) => pick(id) });
+  // Un agent cliqué devient le destinataire ; la personne cliquée, c'est soi.
+  const choose = (id) => (isAgent(id) ? pick(id) : pickUser(id));
 
-  function draw(now) {
-    drawBackground(painter, now);
-    // Du fond vers l'avant : ce qui est plus bas à l'écran passe devant.
-    const things = [];
-    for (const id of AGENT_IDS) {
-      things.push({ y: HOME[id].y - 1, draw: () => drawChair(painter, id) });
-      things.push({ y: HOME[id].y + 1, draw: () => drawDesk(painter, id, isAtWork(actors[id]), now) });
-    }
-    for (const actor of cast) things.push({ y: actor.pos.y, draw: () => drawCharacter(painter, actor, now) });
-    things.sort((a, b) => a.y - b.y);
-    for (const thing of things) thing.draw();
-  }
+  const director = createDirector({ instant: reducedMotion, random: Math.random });
+  const { actors } = director;
+  const bubbles = createBubbles(overlay, PARTICIPANT_IDS, { onPick: choose });
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / 1000);
     last = now;
-    for (const actor of cast) advance(actor, dt, now, reducedMotion);
-    draw(now);
-    for (const actor of cast) bubbles.place(actor, target);
+    director.advance(dt, now);
+    drawFrame(painter, actors, costumes, now);
+    for (const id of PARTICIPANT_IDS) bubbles.place(actors[id], target);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
   // ---------- Clics sur la scène ----------
 
-  /** L'agent visé par un clic : son bureau entier, ou lui-même quand il se promène. */
-  function agentAt(event) {
+  /** Le personnage visé par un clic : un agent par son bureau entier ou par lui-même, la personne par elle-même. */
+  function characterAt(event) {
     const box = canvas.getBoundingClientRect();
     const x = ((event.clientX - box.left) / box.width) * SCENE.width;
     const y = ((event.clientY - box.top) / box.height) * SCENE.height;
@@ -61,21 +57,32 @@ export function createOffice(canvas, overlay) {
       if (Math.abs(x - home.x) < 30 && y > home.y - 20 && y < home.y + 22) return id;
       if (Math.abs(x - pos.x) < 8 && y > pos.y - 18 && y < pos.y + 2) return id;
     }
-    return null;
+    const { pos } = actors[USER];
+    return Math.abs(x - pos.x) < 8 && y > pos.y - 18 && y < pos.y + 2 ? USER : null;
   }
 
   canvas.addEventListener('mousemove', (event) => {
-    canvas.style.cursor = agentAt(event) ? 'pointer' : 'default';
+    canvas.style.cursor = characterAt(event) ? 'pointer' : 'default';
   });
   canvas.addEventListener('click', (event) => {
-    const id = agentAt(event);
-    if (id) pick(id);
+    const id = characterAt(event);
+    if (id) choose(id);
   });
 
   return {
     /** `fn` reçoit l'agent sur lequel on clique, dans la scène ou sur son étiquette. */
     onPick(fn) {
       pick = fn;
+    },
+
+    /** `fn` reçoit la personne quand elle clique sur son propre personnage, ou sur son étiquette. */
+    onPickUser(fn) {
+      pickUser = fn;
+    },
+
+    /** Habille les personnages : `looks` donne l'apparence de chacun (voir looks.js). */
+    setLooks(looks) {
+      costumes = dress(looks);
     },
 
     /** Met en valeur le ou les destinataires du prochain message. */
@@ -85,25 +92,17 @@ export function createOffice(canvas, overlay) {
 
     /** Un personnage va porter son message à son destinataire. */
     deliver(from, to, text, image) {
-      const actor = actors[from];
-      const spot = meetingSpot(from, to);
-      if (!actor || !spot) return;
-      // Une seule bulle à la fois : celui qui parlait encore retourne à sa place.
-      for (const other of cast) {
-        if (other !== actor && isSpeaking(other)) goHome(other);
-      }
-      carryMessage(actor, to, spot, bubbleText(text), image);
+      director.deliver(from, to, bubbleText(text), image);
     },
 
     /** Dit si un agent travaille, et ce qu'il fait ; `activity` omis garde le texte en place. */
     setWorking(id, working, activity) {
-      const actor = actors[id];
-      if (actor) setWorkState(actor, working, activity);
+      director.setWorking(id, working, activity);
     },
 
     /** Remet tout le monde à sa place (changement de salon). */
     reset() {
-      cast.forEach(sendHome);
+      director.reset();
     },
   };
 }

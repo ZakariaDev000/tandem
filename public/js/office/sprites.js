@@ -9,16 +9,29 @@ export const PALETTES = {
   user: { h: '#2b2420', s: '#c98f63', e: '#2b2420', c: '#2f4a7a', d: '#233a61', p: '#55606e', b: '#2b2420' },
 };
 
-export const HEADS = {
-  claude: ['....hhhh....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
-  chatgpt: ['...hhhhhh...', '..hhhhhhhh..', '..dssssssd..', '..dsessesd..', '...ssssss...', '....ssss....'],
-  user: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
+// Les coiffures, au choix de chacun (voir looks.js). Les trois premières sont celles d'origine
+// de Claude, de ChatGPT (avec son casque, aux couleurs de sa tenue) et de la personne (sa casquette).
+export const HAIR_STYLES = {
+  crop: ['....hhhh....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
+  headset: ['...hhhhhh...', '..hhhhhhhh..', '..dssssssd..', '..dsessesd..', '...ssssss...', '....ssss....'],
+  cap: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
+  long: ['...hhhhhh...', '..hhhhhhhh..', '..hssssssh..', '..hsessesh..', '..hssssssh..', '..h.ssss.h..'],
+  bun: ['.....hh.....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
+  curly: ['..hh.hh.hh..', '..hhhhhhhh..', '..hhsssshh..', '..hsessesh..', '...ssssss...', '....ssss....'],
 };
 
 export const BODY = ['..cccccccc..', '.dccccccccd.', '.dccccccccd.', '.sccccccccs.', '..cccccccc..'];
 
 // Les mains remontent d'un pixel : alterné avec BODY, le personnage tape au clavier.
 export const BODY_TYPING = ['..cccccccc..', '.dccccccccd.', '.sccccccccs.', '..cccccccc..', '..cccccccc..'];
+
+// Il s'étire : le buste sans les bras, et les bras levés, à poser par-dessus à partir du haut
+// de la tête. Les têtes n'occupent jamais les colonnes des bras (la 2e et l'avant-dernière).
+export const BODY_ARMS_UP = ['..cccccccc..', '.dccccccccd.', '..cccccccc..', '..cccccccc..', '..cccccccc..'];
+export const ARMS_UP = ['............', '.s........s.', '.d........d.', '.d........d.', '.d........d.', '.d........d.', '.d........d.'];
+
+/** La même tête vue de dos : les cheveux recouvrent le visage, la nuque reste. */
+export const backOf = (head) => head.map((row, i) => (i === head.length - 1 ? row : row.replace(/[se]/g, 'h')));
 
 // Debout, puis un pied levé, puis l'autre.
 export const LEGS = [
