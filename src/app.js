@@ -1,6 +1,7 @@
 // L'appli elle-même : assemble les pièces et démarre le serveur.
 const config = require('./config');
 const { agents } = require('./agents');
+const { Attachments } = require('./attachments');
 const { Conductor } = require('./conductor');
 const { EventHub } = require('./events');
 const { createHttpServer } = require('./http/server');
@@ -14,7 +15,9 @@ function start() {
   store.load();
   const hub = new EventHub();
   const settings = new Settings(config);
-  const conductor = new Conductor({ store, hub, agents });
+  const attachments = new Attachments(config);
+  attachments.keepTidy(() => store.all());
+  const conductor = new Conductor({ store, hub, agents, attachments });
 
   // À la fermeture, on arrête aussi les IA en cours : sans cela leurs outils continueraient seuls.
   const shutdown = (code = 0) => {
@@ -31,7 +34,7 @@ function start() {
     checkEveryMinutes: config.UPDATE_CHECK_MINUTES,
   });
 
-  const server = createHttpServer({ config, store, hub, conductor, agents, settings, updater });
+  const server = createHttpServer({ config, store, hub, conductor, agents, settings, updater, attachments });
   server.listen(config.PORT, config.HOST, () => {
     console.log(`Tandem is running at http://localhost:${config.PORT}`);
     for (const agent of agents.values()) console.log(`${agent.product.padEnd(12)}: ${agent.binary || 'not found'}`);

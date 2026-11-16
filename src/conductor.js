@@ -20,23 +20,26 @@ class Conductor {
   #store;
   #hub;
   #agents;
+  #attachments;
   #turns = new Map(); // salon -> tours en cours, par IA
 
-  constructor({ store, hub, agents }) {
+  constructor({ store, hub, agents, attachments }) {
     this.#store = store;
     this.#hub = hub;
     this.#agents = agents;
+    this.#attachments = attachments;
   }
 
   /**
    * La personne écrit dans le salon : à une IA, ou aux deux.
    * Aux deux, elles répondent l'une après l'autre (la seconde lit la première),
-   * ou en même temps si `parallel` est demandé.
+   * ou en même temps si `parallel` est demandé. `attachments` décrit les fichiers joints au message.
    */
-  post(room, { to, text, parallel }) {
+  post(room, { to, text, parallel, attachments = [] }) {
     const recipients = isAgent(to) ? [to] : AGENT_IDS;
     const together = !!parallel && recipients.length > 1;
-    this.#addMessage(room, { from: USER, to: isAgent(to) ? to : 'both', text, ...(together && { parallel: true }) });
+    const extras = { ...(together && { parallel: true }), ...(attachments.length && { attachments }) };
+    this.#addMessage(room, { from: USER, to: isAgent(to) ? to : 'both', text, ...extras });
     if (together) enqueue(room, recipients);
     else for (const agentId of recipients) enqueue(room, [agentId]);
     this.#announce(room);
@@ -110,6 +113,7 @@ class Conductor {
         const prompt = buildPrompt(room, agentId, {
           includeRules: agent.rulesInFirstPrompt && !session,
           alongside: step.filter((id) => id !== agentId),
+          attachmentsDir: this.#attachments.dirOf(room.id),
         });
         return { agent, session, prompt };
       })
@@ -161,7 +165,8 @@ class Conductor {
   /** Lance le tour d'une IA et renvoie son message, avec ses actions et les images créées. */
   async #runTurn(room, { agent, session, prompt }, readUpTo, shared) {
     const actions = [];
-    const turn = startTurn(agent, { cwd: room.cwd, access: room.access, session, rules: rules(room, agent.id), prompt }, (action) => {
+    const readableDirs = this.#attachments.readableDirs(room.id);
+    const turn = startTurn(agent, { cwd: room.cwd, access: room.access, session, rules: rules(room, agent.id), prompt, readableDirs }, (action) => {
       // Une IA répète souvent la même action plusieurs fois de suite : on ne la note qu'une fois.
       const last = actions[actions.length - 1];
       if (!last || last.verb !== action.verb || last.target !== action.target) actions.push(action);
