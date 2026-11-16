@@ -71,16 +71,28 @@ Ce dossier est ignoré par git.
 
 L'interface suit la langue du navigateur : français ou anglais, avec l'anglais par défaut. Les deux IA répondent dans la langue de vos messages.
 
-Pour ajouter une langue, copiez le bloc `en` de [`public/i18n.js`](public/i18n.js) et traduisez-le. Pour forcer une langue, ajoutez `?lang=fr` à l'adresse.
+Pour ajouter une langue, copiez [`public/js/i18n/en.js`](public/js/i18n/en.js), traduisez-le et inscrivez-le dans [`public/js/i18n/index.js`](public/js/i18n/index.js). Pour forcer une langue, ajoutez `?lang=fr` à l'adresse.
 
 ## Organisation du code
 
-| Fichier | Rôle |
+Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité, et [`server.js`](server.js) ne fait que les assembler.
+
+| Module | Rôle |
 |---|---|
-| [`server.js`](server.js) | Serveur local : salons, relais entre les deux IA, suivi des images. |
-| [`public/office.js`](public/office.js) | Le bureau animé, dessiné dans un canvas. |
-| [`public/app.js`](public/app.js) | La conversation et le lien avec le serveur. |
-| [`public/i18n.js`](public/i18n.js) | Les textes de l'interface, par langue. |
+| [`src/config.js`](src/config.js) | Port et emplacements des données. |
+| [`src/store.js`](src/store.js) | Les salons : en mémoire, et un fichier JSON par salon. |
+| [`src/protocol.js`](src/protocol.js) | Les consignes données aux IA et la lecture du destinataire de leurs réponses. |
+| [`src/conductor.js`](src/conductor.js) | Le chef d'orchestre : à qui le tour, transmission des messages, pause et arrêt. |
+| [`src/agents/`](src/agents) | Un adaptateur par IA (`claude.js`, `codex.js`) et le lanceur commun (`runner.js`). |
+| [`src/images.js`](src/images.js) | Repère les images créées pendant un tour et en garde une copie. |
+| [`src/events.js`](src/events.js) | Diffusion en direct vers la page (Server-Sent Events). |
+| [`src/http/`](src/http) | Contrôle d'accès, routes de l'API, fichiers de la page. |
+
+La page est écrite en modules JavaScript natifs, sans outil de construction, dans [`public/js/`](public/js) : le bureau animé (`office/`), la conversation (`chat/`), les traductions (`i18n/`) et le lien avec le serveur (`api.js`).
+
+### Brancher une autre IA
+
+Une IA est décrite par un adaptateur dans `src/agents/` : la commande à lancer, ses options, et la lecture de sa sortie. Pour en ajouter une, écrivez son adaptateur sur le modèle de [`claude.js`](src/agents/claude.js) et inscrivez-le dans [`src/agents/index.js`](src/agents/index.js). Aujourd'hui, un salon réunit exactement deux IA.
 
 ## Limites connues
 
