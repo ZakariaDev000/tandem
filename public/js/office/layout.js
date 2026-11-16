@@ -16,6 +16,11 @@ export const TABLE = { x: 128, y: 60, seats: { claude: { x: 119, y: 60 }, chatgp
 // Jusqu'où descendre en quittant les meubles pour être sur le plancher libre.
 export const AISLE_Y = 92;
 
+// Les pauses : la machine à café, à côté de laquelle on se tient, et un coin de fenêtre pour chacun.
+// On va au café en passant assez bas pour ne pas frôler le bureau de droite.
+export const COFFEE = { x: 228, y: 60, aisleY: 104 };
+export const WINDOW = { claude: { x: 104, y: 58 }, chatgpt: { x: 152, y: 58 } };
+
 // Où se placer pour parler à quelqu'un, selon qui vient.
 export const MEET = {
   claude: { chatgpt: { x: 152, y: 92 }, user: { x: 112, y: 126 } },

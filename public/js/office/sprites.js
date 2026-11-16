@@ -20,6 +20,14 @@ export const BODY = ['..cccccccc..', '.dccccccccd.', '.dccccccccd.', '.scccccccc
 // Les mains remontent d'un pixel : alterné avec BODY, le personnage tape au clavier.
 export const BODY_TYPING = ['..cccccccc..', '.dccccccccd.', '.sccccccccs.', '..cccccccc..', '..cccccccc..'];
 
+// Il s'étire : le buste sans les bras, et les bras levés, à poser par-dessus à partir du haut
+// de la tête. Les têtes n'occupent jamais les colonnes des bras (la 2e et l'avant-dernière).
+export const BODY_ARMS_UP = ['..cccccccc..', '.dccccccccd.', '..cccccccc..', '..cccccccc..', '..cccccccc..'];
+export const ARMS_UP = ['............', '.s........s.', '.d........d.', '.d........d.', '.d........d.', '.d........d.', '.d........d.'];
+
+/** La même tête vue de dos : les cheveux recouvrent le visage, la nuque reste. */
+export const backOf = (head) => head.map((row, i) => (i === head.length - 1 ? row : row.replace(/[se]/g, 'h')));
+
 // Debout, puis un pied levé, puis l'autre.
 export const LEGS = [
   ['...pppppp...', '...pp..pp...', '...pp..pp...', '...pp..pp...', '...bb..bb...'],

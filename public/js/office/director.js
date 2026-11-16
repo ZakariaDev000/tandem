@@ -1,14 +1,19 @@
 // Le régisseur : il traduit ce qui se passe dans le salon en déplacements des personnages.
-// Qui porte un message à qui, qui travaille, et où. Aucun dessin ici.
+// Qui porte un message à qui, qui travaille et où, et qui peut s'accorder une pause. Aucun dessin ici.
 import { AGENT_IDS, PARTICIPANT_IDS, USER } from '../participants.js';
-import { advance, carryMessage, createActor, goHome, isSpeaking, sendHome, setStation, setWorkState } from './actors.js';
+import { advance, carryMessage, createActor, cutBreak, goHome, isSpeaking, sendHome, setStation, setWorkState } from './actors.js';
+import { createIdleLife } from './idle.js';
 import { MEET } from './layout.js';
 import { placeOf } from './routes.js';
 
-/** `instant` : les trajets se font d'un coup (mouvements réduits). */
-export function createDirector({ instant }) {
+/**
+ * `instant` : les trajets se font d'un coup et personne ne prend de pause (mouvements réduits).
+ * `random` : la source de hasard des pauses, comme Math.random.
+ */
+export function createDirector({ instant, random }) {
   const actors = Object.fromEntries(PARTICIPANT_IDS.map((id) => [id, createActor(id)]));
   const cast = Object.values(actors);
+  const idleLife = instant ? null : createIdleLife({ random });
 
   /**
    * Deux agents qui travaillent en même temps s'installent à la table. Celui qui y est
@@ -43,9 +48,12 @@ export function createDirector({ instant }) {
       const actor = actors[from];
       const spot = MEET[from] && MEET[from][to];
       if (!actor || !spot) return;
-      // Une seule bulle à la fois : celui qui parlait encore retourne à sa place.
       for (const other of cast) {
-        if (other !== actor && isSpeaking(other)) goHome(other);
+        if (other === actor) continue;
+        // Une seule bulle à la fois : celui qui parlait encore retourne à sa place.
+        if (isSpeaking(other)) goHome(other);
+        // Et chacun est à sa place pour l'écouter : les pauses s'arrêtent là.
+        cutBreak(other);
       }
       carryMessage(actor, spot, text, image, leanOf(from, to, spot));
     },
@@ -65,6 +73,7 @@ export function createDirector({ instant }) {
     advance(dt, now) {
       seatAgents();
       for (const actor of cast) advance(actor, dt, now, instant);
+      if (idleLife) idleLife.update(cast, now);
     },
   };
 }

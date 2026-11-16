@@ -1,8 +1,8 @@
 // Les trajets : par où passer d'un endroit à un autre sans traverser les meubles.
 // Tout se fait à angle droit. Aucun état ici, seulement de la géométrie sur layout.js.
-import { AISLE_Y, EXIT, HOME, TABLE } from './layout.js';
+import { AISLE_Y, COFFEE, EXIT, HOME, TABLE, WINDOW } from './layout.js';
 
-const PLACES = ['home', 'table'];
+const PLACES = ['home', 'table', 'window', 'coffee'];
 const EPSILON = 0.001;
 
 const near = (a, b) => Math.abs(a - b) < EPSILON;
@@ -21,6 +21,12 @@ function approach(id, place) {
     const seat = TABLE.seats[id];
     return [seat, { x: exit.x, y: seat.y }, ...lane];
   }
+  if (place === 'window') {
+    const spot = WINDOW[id];
+    return [spot, { x: exit.x, y: spot.y }, ...lane];
+  }
+  // La machine à café a sa propre allée, à droite du bureau de droite.
+  if (place === 'coffee') return [COFFEE, { x: COFFEE.x, y: COFFEE.aisleY }];
   return [HOME[id], ...lane];
 }
 
@@ -81,3 +87,6 @@ export const routeToSpot = (id, from, spot) => plan(id, from, [spot], false);
 
 /** Vers son poste (`home` ou `table`) : on se range d'abord dans son allée, puis on la remonte. */
 export const routeToStation = (id, from, station) => plan(id, from, approach(id, station), true);
+
+/** Vers un lieu de pause (`window` ou `coffee`) : comme pour aller parler, en profondeur d'abord. */
+export const routeToBreak = (id, from, place) => plan(id, from, approach(id, place), false);

@@ -21,7 +21,7 @@ export function createOffice(canvas, overlay) {
   let pick = () => {};
   let target = BOTH;
 
-  const director = createDirector({ instant: reducedMotion });
+  const director = createDirector({ instant: reducedMotion, random: Math.random });
   const { actors } = director;
   const bubbles = createBubbles(overlay, PARTICIPANT_IDS, { onPick: (id) => pick(id) });
 
