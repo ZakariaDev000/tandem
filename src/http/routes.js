@@ -26,7 +26,8 @@ function createRoutes({ store, hub, conductor, agents, settings, updater }) {
       hub.subscribe(req, res, { rooms: store.all().map(toPublic), agents: installed, settings: settings.all(), update: updater.state, startedAt });
     }],
 
-    ['GET', '/api/media/:roomId/:file', ({ res, params }) => serveMedia(res, store.mediaDirOf(params.roomId), params.file)],
+    // Le dossier vient du salon trouvé, jamais du texte reçu : un identifiant comme « ../ » ne peut pas en sortir.
+    ['GET', '/api/media/:roomId/:file', withRoom(({ res, params, room }) => serveMedia(res, store.mediaDirOf(room.id), params.file))],
 
     ['POST', '/api/settings', async ({ req, res }) => {
       const saved = settings.update(await readJson(req));

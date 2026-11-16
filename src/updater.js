@@ -11,6 +11,7 @@ const BUSY_RETRY_MS = 10000;
 // Laisse le temps de répondre à la page avant de couper le serveur.
 const RESTART_DELAY_MS = 300;
 const MAX_LISTED_CHANGES = 5;
+const MAX_TIMER_MS = 2 ** 31 - 1;
 
 class Updater {
   #rootDir;
@@ -32,7 +33,8 @@ class Updater {
     this.#settings = settings;
     this.#isBusy = isBusy;
     this.#restart = restart;
-    this.#checkEveryMs = checkEveryMinutes * 60000;
+    // Au-delà de cette durée, Node ramène une minuterie à 1 ms : la vérification tournerait en boucle.
+    this.#checkEveryMs = Math.min(checkEveryMinutes * 60000, MAX_TIMER_MS);
   }
 
   get state() {
