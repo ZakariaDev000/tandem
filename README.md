@@ -57,6 +57,10 @@ Les salons sont rangés dans le volet de gauche, le plus récemment actif en pre
 
 La suppression d'un salon reste dans l'en-tête de la conversation (bouton ✕).
 
+### Thème clair ou sombre
+
+La page suit le thème de votre système. Pour en imposer un, ouvrez les réglages (bouton ⚙) et choisissez « Clair » ou « Sombre » ; le navigateur s'en souvient. Le bureau en pixels garde ses couleurs dans les deux thèmes.
+
 ## Mises à jour
 
 Installé avec `git clone`, Tandem se met à jour tout seul. Au démarrage, puis toutes les 30 minutes, il regarde si la branche `main` du dépôt a avancé. Si oui, il attend qu'aucune IA ne travaille, récupère la nouvelle version, se relance, et la page se recharge.

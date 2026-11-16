@@ -6,6 +6,7 @@ import { byId } from './dom.js';
 import { actionText } from './format.js';
 import { AGENT_IDS, SYSTEM, USER } from './participants.js';
 import { createSidebar } from './sidebar.js';
+import { initTheme } from './theme.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
 import { createComposer } from './chat/composer.js';
@@ -17,6 +18,7 @@ import { createUnread } from './unread.js';
 import { createUpdateUi } from './update.js';
 
 translatePage();
+initTheme();
 
 const store = createStore();
 const office = createOffice(byId('scene'), byId('overlay'));
