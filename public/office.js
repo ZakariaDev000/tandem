@@ -57,6 +57,7 @@
         working: false,
         activity: '',
         say: '',
+        sayImage: '',
         lean: '',
         sayUntil: 0,
         step: 0,
@@ -304,10 +305,18 @@
         text = a.activity || 'réfléchit…';
         work = true;
       }
-      const key = (work ? 'w:' : 's:' + a.lean + ':') + text;
+      const key = (work ? 'w:' : 's:' + a.lean + ':' + a.sayImage + ':') + text;
       if (key !== a.shown) {
         a.shown = key;
-        if (text) a.bubble.textContent = text;
+        if (text) {
+          a.bubble.textContent = text;
+          if (!work && a.sayImage) {
+            const img = document.createElement('img');
+            img.src = a.sayImage;
+            img.alt = '';
+            a.bubble.prepend(img);
+          }
+        }
         a.bubble.classList.toggle('work', work);
         // La bulle s'étale du côté opposé à celui à qui on parle, pour ne pas le cacher.
         a.bubble.classList.toggle('lean-right', !work && a.lean === 'right');
@@ -371,13 +380,18 @@
         target = t;
       },
       /** Un personnage va porter son message à son destinataire. */
-      deliver(from, to, text) {
+      deliver(from, to, text, image) {
         const a = actors[from];
         const spot = MEET[from] && MEET[from][to];
         if (!a || !spot) return;
+        // Une seule bulle à la fois : celui qui parlait encore retourne à sa place.
+        for (const other of Object.values(actors)) {
+          if (other !== a && (other.mode === 'going' || other.mode === 'talking')) goHome(other);
+        }
         a.path = route(a, spot);
         a.mode = 'going';
         a.say = clip(text);
+        a.sayImage = image || '';
         const listener = HOME[to];
         a.lean = !listener || from !== 'zak' && to === 'zak' ? '' : listener.x < spot.x ? 'right' : 'left';
       },

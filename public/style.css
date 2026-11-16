@@ -156,6 +156,7 @@ body {
   border-bottom: 2px solid var(--ink);
   transform: rotate(45deg) translate(-3px, -3px);
 }
+.bubble img { float: left; width: 46px; height: 46px; object-fit: cover; margin: 0 8px 2px 0; border: 2px solid var(--ink); background: var(--paper); }
 .bubble.lean-right { transform: translate(-14%, -100%); }
 .bubble.lean-right::after { left: calc(14% - 5px); }
 .bubble.lean-left { transform: translate(-86%, -100%); }
@@ -224,6 +225,12 @@ body {
 .text code { font: 12px var(--mono); background: var(--paper); padding: 1px 4px; border: 1px solid var(--line); }
 .text pre { margin: 6px 0; padding: 8px 10px; background: var(--ink); color: #f6efe2; overflow-x: auto; font: 12px/1.45 var(--mono); }
 .text pre code { background: none; border: 0; padding: 0; color: inherit; }
+.images { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 8px 0 4px; }
+.images a { display: block; border: 2px solid var(--ink); background: var(--paper); box-shadow: 2px 2px 0 var(--ink); text-decoration: none; color: var(--ink-2); min-width: 0; }
+.images a:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.images img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; background: repeating-conic-gradient(#efe6d6 0% 25%, #f9f3e8 0% 50%) 50% / 16px 16px; }
+.images span { display: block; font: 11px var(--mono); padding: 3px 6px; border-top: 2px solid var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.images a:only-child { grid-column: 1 / -1; max-width: 260px; }
 .actions-done { margin-top: 4px; font: 11px var(--mono); color: var(--ink-2); }
 .actions-done summary { cursor: pointer; }
 .actions-done ul { margin: 4px 0 0; padding-left: 16px; }

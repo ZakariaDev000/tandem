@@ -16,8 +16,71 @@ const PUBLIC = path.join(ROOT, 'public');
 const DATA = process.env.TANDEM_DATA || path.join(ROOT, 'data');
 const ROOMS_DIR = path.join(DATA, 'rooms');
 const WORK_DIR = path.join(DATA, 'workspaces');
+const MEDIA_DIR = path.join(DATA, 'media');
 fs.mkdirSync(ROOMS_DIR, { recursive: true });
 fs.mkdirSync(WORK_DIR, { recursive: true });
+fs.mkdirSync(MEDIA_DIR, { recursive: true });
+
+// ---------- Images créées pendant un tour ----------
+
+const IMG_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
+const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', '.venv', 'Pods', 'DerivedData']);
+
+/** Relève les images d'un dossier (chemin relatif -> date de modification). */
+function scanImages(dir, depth = 4, out = new Map(), rel = '') {
+  if (out.size > 4000) return out;
+  let entries;
+  try {
+    entries = fs.readdirSync(path.join(dir, rel), { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const e of entries) {
+    const r = rel ? rel + '/' + e.name : e.name;
+    if (e.isDirectory()) {
+      if (depth > 0 && !SKIP_DIRS.has(e.name) && !e.name.startsWith('.')) scanImages(dir, depth - 1, out, r);
+    } else if (e.isFile() && IMG_EXT.has(path.extname(e.name).toLowerCase())) {
+      try {
+        const st = fs.statSync(path.join(dir, r));
+        out.set(r, st.mtimeMs + ':' + st.size);
+      } catch {}
+    }
+  }
+  return out;
+}
+
+/**
+ * Compare le dossier avant et après un tour, et garde une copie de chaque image
+ * nouvelle ou modifiée : le chat montre ainsi chaque version, même si le fichier
+ * est remplacé plus tard.
+ */
+function collectImages(room, agent, before, startedAt, session, msgId) {
+  const found = [];
+  const after = scanImages(room.cwd);
+  for (const [rel, sig] of after) if (before.get(rel) !== sig) found.push({ name: rel, file: path.join(room.cwd, rel) });
+  // Codex range d'abord ses images dans son propre dossier : on les reprend s'il ne les a pas copiées.
+  if (!found.length && agent === 'chatgpt' && session) {
+    const dir = path.join(os.homedir(), '.codex', 'generated_images', session);
+    try {
+      for (const name of fs.readdirSync(dir)) {
+        const file = path.join(dir, name);
+        if (IMG_EXT.has(path.extname(name).toLowerCase()) && fs.statSync(file).mtimeMs >= startedAt) found.push({ name, file });
+      }
+    } catch {}
+  }
+  const images = [];
+  const dest = path.join(MEDIA_DIR, room.id);
+  for (const img of found.slice(0, 8)) {
+    try {
+      if (fs.statSync(img.file).size > 25e6) continue;
+      fs.mkdirSync(dest, { recursive: true });
+      const stored = `${msgId.slice(0, 8)}-${images.length}${path.extname(img.name).toLowerCase()}`;
+      fs.copyFileSync(img.file, path.join(dest, stored));
+      images.push({ name: img.name, url: `/api/media/${room.id}/${stored}` });
+    } catch {}
+  }
+  return images;
+}
 
 const NAME = { zak: 'Zak', claude: 'Claude', chatgpt: 'ChatGPT' };
 const OTHER = { claude: 'chatgpt', chatgpt: 'claude' };
@@ -126,6 +189,9 @@ function rules(room, agent) {
     `1. Écris ton message normalement, en français, court et concret.`,
     `2. Termine TOUJOURS par une dernière ligne seule : [[à: ${other}]] si tu attends une réponse ou une action de ${NAME[other]}, ou [[à: zak]] si le travail est fini, si tu as besoin de Zak, ou s'il n'y a plus rien à demander.`,
     `3. Ne relance pas ${NAME[other]} par politesse ou pour confirmer : s'il ne reste rien à faire, adresse-toi à Zak et l'échange s'arrête.`,
+    agent === 'chatgpt'
+      ? `4. Tu sais générer des images avec ton outil intégré. Quand on t'en demande une, crée-la, enregistre-la dans le dossier de travail et cite son nom de fichier : le salon l'affiche tout seul à Zak.`
+      : `4. ChatGPT sait générer des images (logo, bannière, illustration) : demande-les-lui quand il en faut. Tu peux ensuite ouvrir le fichier pour le regarder et demander une retouche. Les images créées dans le dossier de travail s'affichent toutes seules à Zak.`,
   ].join('\n');
 }
 
@@ -195,8 +261,11 @@ function describeClaudeTool(name, input = {}) {
 
 function describeCodexItem(item) {
   switch (item.type) {
-    case 'command_execution':
-      return 'Lance : ' + short(item.command, 60);
+    case 'command_execution': {
+      // Codex enveloppe chaque commande dans « /bin/zsh -lc '…' » : on ne garde que la commande.
+      const cmd = String(item.command || '').replace(/^\S*\/(?:zsh|bash|sh)\s+-l?c\s+/, '').replace(/^(['"])([\s\S]*)\1$/, '$2');
+      return 'Lance : ' + short(cmd, 60);
+    }
     case 'file_change': {
       const files = (item.changes || []).map((c) => base(c.path)).filter(Boolean);
       return 'Modifie ' + (files.slice(0, 3).join(', ') || 'des fichiers');
@@ -328,6 +397,8 @@ async function pump(room) {
   room.running = agent;
   broadcast('room', roomMeta(room));
   const actions = [];
+  const imagesBefore = scanImages(room.cwd);
+  const startedAt = Date.now();
   try {
     const { text, session } = await runAgent(room, agent, prompt, (a) => {
       if (actions[actions.length - 1] !== a) actions.push(a);
@@ -336,7 +407,9 @@ async function pump(room) {
     room.sessions[agent] = session;
     room.seen[agent] = upTo;
     const reply = parseReply(agent, text);
-    addMessage(room, { from: agent, to: reply.to, text: reply.text, actions });
+    const id = crypto.randomUUID();
+    const images = collectImages(room, agent, imagesBefore, startedAt, session, id);
+    addMessage(room, { id, from: agent, to: reply.to, text: reply.text, actions, images });
     if (reply.to === OTHER[agent]) enqueue(room, reply.to, true);
   } catch (e) {
     room.queue = [];
@@ -359,6 +432,10 @@ const MIME = {
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
 };
 
 function send(res, status, body) {
@@ -423,6 +500,20 @@ const server = http.createServer(async (req, res) => {
           clients.delete(res);
         });
         return;
+      }
+
+      if (req.method === 'GET' && seg[1] === 'media' && seg.length === 4) {
+        const file = path.join(MEDIA_DIR, path.basename(seg[2]), path.basename(decodeURIComponent(seg[3])));
+        const type = MIME[path.extname(file)];
+        if (!type || !type.startsWith('image/') || !fs.existsSync(file)) return send(res, 404, { error: 'Image introuvable' });
+        // « sandbox » empêche un fichier SVG ouvert seul d'exécuter du code sur cette page.
+        res.writeHead(200, {
+          'Content-Type': type,
+          'Cache-Control': 'private, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+        });
+        return fs.createReadStream(file).pipe(res);
       }
 
       if (req.method === 'POST' && seg[1] === 'pick-folder') {
@@ -516,6 +607,7 @@ const server = http.createServer(async (req, res) => {
           }
           rooms.delete(room.id);
           fs.rmSync(path.join(ROOMS_DIR, room.id + '.json'), { force: true });
+          fs.rmSync(path.join(MEDIA_DIR, room.id), { recursive: true, force: true });
           // Le dossier créé pour un salon sans projet n'est retiré que s'il est vide.
           if (room.ownFolder) {
             try {

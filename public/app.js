@@ -106,11 +106,16 @@
     const acts = m.actions && m.actions.length
       ? `<details class="actions-done"><summary>${m.actions.length} action${m.actions.length > 1 ? 's' : ''}</summary><ul>${m.actions.map((a) => '<li>' + esc(a) + '</li>').join('')}</ul></details>`
       : '';
+    const imgs = m.images && m.images.length
+      ? `<div class="images">${m.images.map((im) => `<a href="${esc(im.url)}" target="_blank" rel="noopener" title="Ouvrir ${esc(im.name)} en grand"><img src="${esc(im.url)}" alt="${esc(im.name)}" loading="lazy"><span>${esc(im.name)}</span></a>`).join('')}</div>`
+      : '';
     el.innerHTML = `<div class="avatar ${m.from}" aria-hidden="true">${INITIAL[m.from]}</div>
       <div class="body">
         <div class="who">${NAME[m.from]} <span class="to">→ ${toLabel(m)}</span><time>${clock(m.ts)}</time></div>
-        <div class="text">${render(m.text)}</div>${acts}
+        <div class="text">${render(m.text)}</div>${imgs}${acts}
       </div>`;
+    // Une image qui finit de charger allonge le fil : on reste en bas.
+    for (const img of el.querySelectorAll('.images img')) img.addEventListener('load', scrollDown, { once: true });
     return el;
   }
 
@@ -280,7 +285,10 @@
       renderLive();
       renderHead();
       scrollDown();
-      if (message.from !== 'system') office.deliver(message.from, message.to, message.text);
+      if (message.from !== 'system') {
+        const first = message.images && message.images[0];
+        office.deliver(message.from, message.to, message.text, first ? first.url : null);
+      }
     });
     es.addEventListener('activity', (e) => {
       const { roomId, agent, text } = JSON.parse(e.data);
