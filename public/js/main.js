@@ -4,7 +4,11 @@ import { apply as translatePage } from './i18n/index.js';
 import { subscribe } from './api.js';
 import { byId } from './dom.js';
 import { actionText } from './format.js';
-import { AGENT_IDS, SYSTEM } from './participants.js';
+import { AGENT_IDS, SYSTEM, USER } from './participants.js';
+import { createSidebar } from './sidebar.js';
+import { initTheme } from './theme.js';
+import { showUnreadInTitle } from './page-title.js';
+import { isBusy } from './room-state.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
 import { createAllowedList } from './chat/allowed.js';
@@ -12,20 +16,31 @@ import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
 import { attachedImages, attachmentNames } from './chat/message-attachments.js';
 import { initRoomDialog } from './chat/room-dialog.js';
-import { createRoomTabs } from './chat/tabs.js';
+import { createRoomList } from './chat/room-list.js';
 import { createThread } from './chat/thread.js';
+import { createNotifier } from './notify/notifier.js';
+import { createRoomAlerts } from './notify/room-alerts.js';
+import { initNotifySettings } from './notify/settings.js';
+import { createUnread } from './unread.js';
 import { createUpdateUi } from './update.js';
 
 translatePage();
+initTheme();
 
 const store = createStore();
 const office = createOffice(byId('scene'), byId('overlay'));
-const tabs = createRoomTabs({ store, onSelect: select });
+const sidebar = createSidebar();
+const unread = createUnread({ store, onSeen: renderRooms });
+const roomList = createRoomList({ store, unread, onSelect: select, reveal: () => sidebar.expand() });
 const header = createHeader({ store });
 const thread = createThread({ store });
 const allowed = createAllowedList({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
+// `notifier.notify({ title, body, roomId })` sert à tout module qui doit attirer l'attention de la personne.
+const notifier = createNotifier({ isWatching: unread.isWatching, onOpen: (id) => store.has(id) && select(id) });
+const alerts = createRoomAlerts({ store, notify: notifier.notify });
+initNotifySettings({ notifier });
 
 /** Dans le bureau, travaillent les agents qui répondent dans le salon affiché : un seul, ou les deux en parallèle. */
 function syncOffice() {
@@ -36,11 +51,19 @@ function syncOffice() {
   }
 }
 
+/** La liste des salons, et ce qui la résume quand elle est repliée ou que l'onglet est en arrière-plan. */
+function renderRooms() {
+  roomList.render();
+  sidebar.flagUnread(unread.count > 0);
+  showUnreadInTitle(unread.count);
+}
+
 /** Affiche un salon, ou l'écran d'accueil s'il n'existe pas. */
 function select(id) {
   store.select(id);
+  unread.seeCurrent();
   office.reset();
-  tabs.render();
+  renderRooms();
   header.render();
   allowed.render();
   thread.render();
@@ -74,20 +97,23 @@ subscribe({
   roomCreated(room) {
     if (!store.has(room.id)) store.put(room);
     if (!store.currentId) select(room.id);
-    else tabs.render();
+    else renderRooms();
   },
 
   roomDeleted({ id }) {
     const wasCurrent = id === store.currentId;
     store.remove(id);
     if (wasCurrent) select(store.newestId());
-    else tabs.render();
+    else renderRooms();
   },
 
   room(meta) {
+    const known = store.get(meta.id);
+    const wasBusy = !!known && isBusy(known);
     const room = store.update(meta);
     if (!room) return;
-    tabs.render();
+    alerts.onRoomChange(room, wasBusy);
+    renderRooms();
     if (room.id !== store.currentId) return;
     header.render();
     allowed.render();
@@ -97,7 +123,13 @@ subscribe({
   },
 
   message({ roomId, message }) {
-    if (!store.addMessage(roomId, message) || roomId !== store.currentId) return;
+    const room = store.addMessage(roomId, message);
+    if (!room) return;
+    if (message.from !== USER) unread.add(roomId);
+    alerts.onMessage(room, message);
+    // Un message remonte son salon en tête de liste.
+    renderRooms();
+    if (roomId !== store.currentId) return;
     thread.append(message);
     header.render();
     thread.scrollDown();

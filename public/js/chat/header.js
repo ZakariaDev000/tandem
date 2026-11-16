@@ -3,19 +3,16 @@ import { t } from '../i18n/index.js';
 import * as api from '../api.js';
 import { byId } from '../dom.js';
 import { displayName } from '../format.js';
-import { USER, isAgent } from '../participants.js';
-
-const isBusy = (room) => room.running.length > 0 || room.queue.length > 0;
+import { handedBackBy, isBusy } from '../room-state.js';
 
 function folderLabel(room) {
-  if (room.ownFolder) return t('room.noFolder');
-  const tail = room.cwd.split('/').filter(Boolean).slice(-2).join('/');
-  return '…/' + tail + (room.access === 'read' ? ' · ' + t('room.readOnly') : '');
+  const notes = [room.access === 'read' && !room.ownFolder && t('room.readOnly'), room.archived && t('room.archived')].filter(Boolean);
+  const folder = room.ownFolder ? t('room.noFolder') : '…/' + room.cwd.split('/').filter(Boolean).slice(-2).join('/');
+  return [folder, ...notes].join(' · ');
 }
 
 /** L'état d'un salon en une phrase. `tone` choisit la couleur de l'étiquette. */
 function roomStatus(room) {
-  const last = room.messages[room.messages.length - 1];
   if (room.stopping) return { text: t('status.stopping') };
   // Tant qu'une demande d'autorisation attend, c'est à la personne de jouer.
   const [asking] = room.approvals;
@@ -24,8 +21,8 @@ function roomStatus(room) {
   if (room.running.length === 1) return { text: t('status.working', { name: displayName(room.running[0]) }), tone: room.running[0] };
   if (room.running.length > 1) return { text: t('status.workingTogether', { names: room.running.map(displayName).join(' + ') }) };
   if (room.paused && room.queue.length) return { text: t('status.paused') };
-  // Le dernier mot est celui d'un agent qui s'adresse à la personne : ils ont fini entre eux.
-  if (last && isAgent(last.from) && last.to === USER) return { text: t('status.done'), tone: 'done' };
+  // Un agent a rendu la main à la personne : ils ont fini entre eux.
+  if (handedBackBy(room)) return { text: t('status.done'), tone: 'done' };
   return { text: room.messages.length ? t('status.waiting') : t('status.ready') };
 }
 

@@ -9,6 +9,8 @@ const { shorten, expandHome } = require('./util');
 // Ce qui décrit le tour en cours ne s'enregistre pas : au redémarrage, plus rien ne tourne.
 const RUNTIME_FIELDS = ['running', 'queue', 'paused', 'stopping', 'approvals'];
 
+const TITLE_MAX = 60;
+
 const blankPerAgent = (value) => Object.fromEntries(AGENT_IDS.map((id) => [id, value]));
 
 function resetRuntime(room) {
@@ -87,7 +89,7 @@ class RoomStore {
     }
     const room = {
       id,
-      title: shorten(title, 60) || 'Untitled room',
+      title: shorten(title, TITLE_MAX) || 'Untitled room',
       cwd: folder,
       ownFolder,
       access: access === 'read' ? 'read' : 'write',
@@ -101,6 +103,23 @@ class RoomStore {
     this.#rooms.set(id, room);
     this.save(room);
     return room;
+  }
+
+  /** Renomme ou archive un salon : rien d'autre ne se modifie après sa création. */
+  edit(room, changes) {
+    const { title, archived } = changes || {};
+    const accepted = {};
+    if (title !== undefined) {
+      accepted.title = typeof title === 'string' ? shorten(title, TITLE_MAX) : '';
+      if (!accepted.title) throw new AppError(400, 'title_invalid', 'Give the room a title.');
+    }
+    if (archived !== undefined) {
+      if (typeof archived !== 'boolean') throw new AppError(400, 'archived_invalid', 'Archived must be true or false.');
+      accepted.archived = archived;
+    }
+    if (!Object.keys(accepted).length) throw new AppError(400, 'nothing_to_change', 'Nothing to change.');
+    Object.assign(room, accepted);
+    this.save(room);
   }
 
   save(room) {

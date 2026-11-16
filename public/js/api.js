@@ -22,6 +22,8 @@ function failure(data) {
 }
 
 export const createRoom = ({ title, cwd, access }) => request('POST', '/api/rooms', { title, cwd, access });
+export const renameRoom = (roomId, title) => request('PATCH', `/api/rooms/${roomId}`, { title });
+export const setArchived = (roomId, archived) => request('PATCH', `/api/rooms/${roomId}`, { archived });
 export const deleteRoom = (roomId) => request('DELETE', `/api/rooms/${roomId}`);
 export const sendMessage = (roomId, { to, text, parallel, attachments }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel, attachments });
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });

@@ -2,7 +2,7 @@
 
 Un salon local où une session **Claude Code** et une session **Codex** (ChatGPT) travaillent ensemble : elles se posent des questions, se relisent, se passent des fichiers et des images, puis s'arrêtent quand elles n'ont plus rien à se demander.
 
-Tout se passe dans une page web servie depuis votre machine : un petit bureau animé en pixels à gauche, la conversation complète à droite.
+Tout se passe dans une page web servie depuis votre machine : la liste des salons à gauche, un petit bureau animé en pixels au centre, la conversation complète à droite.
 
 ## Ce qu'il faut
 
@@ -38,6 +38,8 @@ PORT=4000 node server.js
 
 Pendant ce temps, la page montre qui travaille, ce qu'il fait (fichier lu, commande lancée) et qui parle à qui. Les images créées pendant un tour s'affichent dans la conversation, et chaque version est conservée.
 
+Dans la conversation, chaque bloc de code a un bouton « Copier » (il apparaît au survol), les tableaux s'affichent en tableaux, et les adresses web sont cliquables : elles s'ouvrent dans un nouvel onglet. Seules les adresses `http` et `https` deviennent des liens.
+
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
 ### Joindre des fichiers
@@ -51,6 +53,31 @@ Les fichiers joints sont gardés dans le dossier de données de Tandem, jamais d
 Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'autre** : la seconde lit la réponse de la première, et elles ne modifient jamais les mêmes fichiers au même moment.
 
 L'interrupteur **En parallèle** les fait répondre **en même temps**, sans se lire. C'est utile pour comparer deux avis indépendants. Évitez-le pour un travail sur les mêmes fichiers : rien n'empêche alors les deux IA de modifier le même fichier.
+
+### La liste des salons
+
+Les salons sont rangés dans le volet de gauche, le plus récemment actif en premier. Un point vert clignote à côté d'un salon où une IA travaille ; un carré orange signale un message arrivé pendant que vous regardiez ailleurs.
+
+- **Chercher** : tapez dans le champ en haut de la liste. `/` ou `Ctrl+K` (`⌘K` sur Mac) y mène depuis n'importe où, `Échap` l'efface.
+- **Renommer** : le bouton ✎ du salon, un double-clic sur son titre, ou `F2`. `Entrée` valide, `Échap` annule.
+- **Archiver** : le bouton ↓ range le salon dans le groupe « Archivés », en bas de la liste. Un salon archivé s'ouvre et se lit comme les autres ; le bouton ↑ le remet dans la liste.
+- **Replier le volet** : le bouton ☰ de la barre du haut laisse toute la largeur au bureau. Le navigateur s'en souvient.
+
+La suppression d'un salon reste dans l'en-tête de la conversation (bouton ✕).
+
+### Thème clair ou sombre
+
+La page suit le thème de votre système. Pour en imposer un, ouvrez les réglages (bouton ⚙) et choisissez « Clair » ou « Sombre » ; le navigateur s'en souvient. Le bureau en pixels garde ses couleurs dans les deux thèmes.
+
+### Être prévenu quand c'est votre tour
+
+Laissez Tandem dans un onglet en arrière-plan pendant que les IA travaillent : il vous prévient quand un échange se termine (une IA s'adresse à vous et plus rien n'attend) et quand un tour échoue.
+
+- **Notifications** : dans les réglages (bouton ⚙), activez « Me prévenir quand c'est mon tour ». Le navigateur demande alors votre permission, jamais avant. Un clic sur une notification ramène l'onglet au premier plan et ouvre le salon concerné.
+- **Son** : « Jouer un son » ajoute un court signal, fabriqué par le navigateur. Il fonctionne aussi sans les notifications.
+- **Titre de l'onglet** : le nombre de salons non lus s'y affiche, par exemple « (2) Tandem ».
+
+Rien ne vous dérange pour le salon que vous avez sous les yeux. Si le navigateur bloque les notifications, les réglages le disent et expliquent comment les autoriser. Si elles sont autorisées mais n'apparaissent pas, vérifiez les réglages de notification de votre système pour ce navigateur.
 
 ## Mises à jour
 
@@ -100,6 +127,8 @@ Tout reste sur votre machine, dans le dossier `data/` :
 - `data/attachments/` : les fichiers que vous joignez à vos messages ;
 - `data/workspaces/` : les dossiers des salons sans projet ;
 - `data/settings.json` : vos réglages.
+
+Le thème, les notifications, le son et l'état du volet des salons sont des préférences d'affichage : c'est votre navigateur qui s'en souvient, pas ce dossier.
 
 Ce dossier est ignoré par git.
 
