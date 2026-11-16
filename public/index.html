@@ -119,6 +119,19 @@
       <label class="radio"><input type="radio" name="theme" value="dark"> <span data-i18n="settings.themeDark">Dark</span></label>
     </fieldset>
     <label class="switch">
+      <input id="notify-desktop" type="checkbox" role="switch">
+      <span class="track" aria-hidden="true"></span>
+      <span data-i18n="settings.notify">Notify me when it is my turn</span>
+    </label>
+    <p class="note" data-i18n="settings.notifyNote">A browser notification when an exchange finishes or a turn fails while you are looking elsewhere.</p>
+    <p id="notify-state" class="note"></p>
+    <label class="switch">
+      <input id="notify-sound" type="checkbox" role="switch">
+      <span class="track" aria-hidden="true"></span>
+      <span data-i18n="settings.sound">Play a sound</span>
+    </label>
+    <p class="note" data-i18n="settings.soundNote">A short beep at the same moments, even without browser notifications.</p>
+    <label class="switch">
       <input id="auto-update" type="checkbox" role="switch">
       <span class="track" aria-hidden="true"></span>
       <span data-i18n="settings.autoUpdate">Install updates automatically</span>

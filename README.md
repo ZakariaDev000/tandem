@@ -61,6 +61,16 @@ La suppression d'un salon reste dans l'en-tête de la conversation (bouton ✕).
 
 La page suit le thème de votre système. Pour en imposer un, ouvrez les réglages (bouton ⚙) et choisissez « Clair » ou « Sombre » ; le navigateur s'en souvient. Le bureau en pixels garde ses couleurs dans les deux thèmes.
 
+### Être prévenu quand c'est votre tour
+
+Laissez Tandem dans un onglet en arrière-plan pendant que les IA travaillent : il vous prévient quand un échange se termine (une IA s'adresse à vous et plus rien n'attend) et quand un tour échoue.
+
+- **Notifications** : dans les réglages (bouton ⚙), activez « Me prévenir quand c'est mon tour ». Le navigateur demande alors votre permission, jamais avant. Un clic sur une notification ramène l'onglet au premier plan et ouvre le salon concerné.
+- **Son** : « Jouer un son » ajoute un court signal, fabriqué par le navigateur. Il fonctionne aussi sans les notifications.
+- **Titre de l'onglet** : le nombre de salons non lus s'y affiche, par exemple « (2) Tandem ».
+
+Rien ne vous dérange pour le salon que vous avez sous les yeux. Si le navigateur bloque les notifications, les réglages le disent et expliquent comment les autoriser. Si elles sont autorisées mais n'apparaissent pas, vérifiez les réglages de notification de votre système pour ce navigateur.
+
 ## Mises à jour
 
 Installé avec `git clone`, Tandem se met à jour tout seul. Au démarrage, puis toutes les 30 minutes, il regarde si la branche `main` du dépôt a avancé. Si oui, il attend qu'aucune IA ne travaille, récupère la nouvelle version, se relance, et la page se recharge.
@@ -96,6 +106,8 @@ Tout reste sur votre machine, dans le dossier `data/` :
 - `data/media/` : une copie de chaque image créée ;
 - `data/workspaces/` : les dossiers des salons sans projet ;
 - `data/settings.json` : vos réglages.
+
+Le thème, les notifications, le son et l'état du volet des salons sont des préférences d'affichage : c'est votre navigateur qui s'en souvient, pas ce dossier.
 
 Ce dossier est ignoré par git.
 

@@ -345,6 +345,7 @@ body {
 .switch input:checked + .track { background: var(--ink); }
 .switch input:checked + .track::after { transform: translateX(14px); background: var(--switch-knob); }
 .switch input:checked ~ span:last-child { color: var(--ink); }
+.switch input:disabled ~ span { opacity: 0.5; }
 .switch input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
 .targets button {
   font: 12px var(--mono);
