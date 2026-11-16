@@ -42,6 +42,7 @@ const GIT_TIMEOUT_MS = 120000;
 // Une liste de fichiers : celle d'un gros dossier dépasse de loin la limite de sortie par défaut,
 // et un nom de fichier peut commencer ou finir par un espace, d'où la sortie gardée telle quelle.
 const LISTING = { maxBuffer: 256e6, raw: true };
+// Les fichiers sont examinés par paquets, pour ne pas en ouvrir des dizaines de milliers à la fois.
 const STAT_BATCH = 256;
 
 const STATUSES = { A: 'added', D: 'deleted', R: 'renamed' };

@@ -24,6 +24,8 @@ export const deleteRoom = (roomId) => request('DELETE', `/api/rooms/${roomId}`);
 export const sendMessage = (roomId, { to, text, parallel }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel });
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });
 export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`);
+/** Le détail d'un fichier changé par un message, désigné par sa place dans la liste du message. */
+export const fileChange = (roomId, messageId, index) => request('GET', `/api/rooms/${roomId}/messages/${encodeURIComponent(messageId)}/changes/${index}`);
 
 export const saveSettings = (changes) => request('POST', '/api/settings', changes);
 export const checkForUpdate = () => request('POST', '/api/update/check');

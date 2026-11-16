@@ -40,6 +40,14 @@ Pendant ce temps, la page montre qui travaille, ce qu'il fait (fichier lu, comma
 
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
+### Voir ce qu'une IA a modifié
+
+Sous chaque réponse d'une IA qui a touché à des fichiers, un bouton du type « 3 fichiers modifiés +12 −4 » ouvre le détail : la liste des fichiers et, pour chacun, les lignes ajoutées et retirées pendant ce tour.
+
+Pour cela, Tandem relève le dossier de travail avant et après chaque tour, avec `git`, dans un dépôt privé rangé dans `data/snapshots/`. Votre propre dépôt (index, branche, commits) n'est jamais touché, et un dossier qui n'est pas un dépôt git convient aussi. Sans `git` sur la machine, les réponses s'affichent simplement sans ce détail.
+
+Ne sont pas relevés : les fichiers ignorés par les `.gitignore` du dossier, les dossiers lourds (`node_modules`, `dist`, `build`, environnements virtuels…), les fichiers de plus de 2 Mo et le contenu des dépôts git imbriqués. En parallèle, une modification est attribuée à la première IA qui termine après elle.
+
 ### Aux deux : l'une après l'autre, ou en parallèle
 
 Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'autre** : la seconde lit la réponse de la première, et elles ne modifient jamais les mêmes fichiers au même moment.
@@ -79,6 +87,7 @@ Tout reste sur votre machine, dans le dossier `data/` :
 
 - `data/rooms/` : les salons et leurs conversations ;
 - `data/media/` : une copie de chaque image créée ;
+- `data/snapshots/` : les relevés du dossier de travail de chaque salon, donc une copie de ses fichiers ; ils sont supprimés avec le salon ;
 - `data/workspaces/` : les dossiers des salons sans projet ;
 - `data/settings.json` : vos réglages.
 
@@ -102,6 +111,8 @@ Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité ; [
 | [`src/conductor.js`](src/conductor.js) | Le chef d'orchestre : à qui le tour, transmission des messages, pause et arrêt. |
 | [`src/agents/`](src/agents) | Un adaptateur par IA (`claude.js`, `codex.js`) et le lanceur commun (`runner.js`). |
 | [`src/images.js`](src/images.js) | Repère les images créées pendant un tour et en garde une copie. |
+| [`src/snapshots.js`](src/snapshots.js) | Relève le dossier de travail dans un dépôt git privé, sans toucher au vôtre. |
+| [`src/changes.js`](src/changes.js) | Ce qu'un tour a changé : le résumé joint au message, et le détail d'un fichier. |
 | [`src/events.js`](src/events.js) | Diffusion en direct vers la page (Server-Sent Events). |
 | [`src/updater.js`](src/updater.js) | Vérifie et installe les mises à jour ; [`src/supervisor.js`](src/supervisor.js) relance l'appli ensuite. |
 | [`src/settings.js`](src/settings.js) | Les réglages de l'installation. |

@@ -7,6 +7,7 @@ import { actionText } from './format.js';
 import { AGENT_IDS, SYSTEM } from './participants.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
+import { initChanges } from './chat/changes.js';
 import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
 import { initRoomDialog } from './chat/room-dialog.js';
@@ -21,6 +22,7 @@ const office = createOffice(byId('scene'), byId('overlay'));
 const tabs = createRoomTabs({ store, onSelect: select });
 const header = createHeader({ store });
 const thread = createThread({ store });
+initChanges({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
 
