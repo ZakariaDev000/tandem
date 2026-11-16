@@ -3,6 +3,7 @@ import { t } from '../i18n/index.js';
 import { actionText, clock, displayName, initial, recipientLabel, systemText } from '../format.js';
 import { escapeHtml, renderMarkdown } from '../markdown.js';
 import { SYSTEM } from '../participants.js';
+import { addCopyButtons } from './code-copy.js';
 
 function imagesHtml(images) {
   if (!images || !images.length) return '';
@@ -10,7 +11,7 @@ function imagesHtml(images) {
     const url = escapeHtml(image.url);
     const name = escapeHtml(image.name);
     const title = escapeHtml(t('image.open', { name: image.name }));
-    return `<a href="${url}" target="_blank" rel="noopener" title="${title}"><img src="${url}" alt="${name}" loading="lazy"><span>${name}</span></a>`;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" title="${title}"><img src="${url}" alt="${name}" loading="lazy"><span>${name}</span></a>`;
   });
   return `<div class="images">${links.join('')}</div>`;
 }
@@ -40,6 +41,7 @@ export function messageElement(message, { onImageLoad }) {
         <div class="who">${escapeHtml(displayName(message.from))} <span class="to">→ ${escapeHtml(recipientLabel(message))}</span><time>${clock(message.ts)}</time></div>
         <div class="text">${renderMarkdown(message.text)}</div>${imagesHtml(message.images)}${actionsHtml(message.actions)}
       </div>`;
+  addCopyButtons(el);
   for (const img of el.querySelectorAll('.images img')) img.addEventListener('load', onImageLoad, { once: true });
   return el;
 }

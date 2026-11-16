@@ -27,6 +27,7 @@
   --switch-knob: #e7a13a;
   --check-1: #efe6d6;
   --check-2: #f9f3e8;
+  --link: #2f4a7a;
 
   /* Communs aux deux thèmes : les couleurs des participants portent toujours un texte clair,
      et le bureau est une image claire quel que soit le thème. */
@@ -72,6 +73,7 @@
   --switch-knob: #7a4300;
   --check-1: #2c2723;
   --check-2: #37312c;
+  --link: #a9c1f0;
 }
 
 * { box-sizing: border-box; }
@@ -316,6 +318,16 @@ body {
 .text code { font: 12px var(--mono); background: var(--paper); padding: 1px 4px; border: 1px solid var(--line); }
 .text pre { margin: 6px 0; padding: 8px 10px; background: var(--code-bg); color: var(--code-ink); overflow-x: auto; font: 12px/1.45 var(--mono); }
 .text pre code { background: none; border: 0; padding: 0; color: inherit; }
+.text .code { position: relative; margin: 6px 0; }
+.text .code pre { margin: 0; }
+.code .copy { position: absolute; top: 4px; right: 4px; opacity: 0; }
+.code:hover .copy, .code:focus-within .copy { opacity: 1; }
+.text a { color: var(--link); text-underline-offset: 2px; }
+.text a:hover { color: var(--ink); }
+.table-wrap { margin: 6px 0; overflow-x: auto; }
+.text table { border-collapse: collapse; font-size: 13px; }
+.text th, .text td { padding: 3px 8px; border: 2px solid var(--line-2); text-align: left; vertical-align: top; }
+.text th { background: var(--paper); font: 600 12px var(--mono); }
 .images { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 8px 0 4px; }
 .images a { display: block; border: 2px solid var(--ink); background: var(--paper); box-shadow: 2px 2px 0 var(--shadow); text-decoration: none; color: var(--ink-2); min-width: 0; }
 .images a:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shadow); }

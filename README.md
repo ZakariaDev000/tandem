@@ -38,6 +38,8 @@ PORT=4000 node server.js
 
 Pendant ce temps, la page montre qui travaille, ce qu'il fait (fichier lu, commande lancée) et qui parle à qui. Les images créées pendant un tour s'affichent dans la conversation, et chaque version est conservée.
 
+Dans la conversation, chaque bloc de code a un bouton « Copier » (il apparaît au survol), les tableaux s'affichent en tableaux, et les adresses web sont cliquables : elles s'ouvrent dans un nouvel onglet. Seules les adresses `http` et `https` deviennent des liens.
+
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
 ### Aux deux : l'une après l'autre, ou en parallèle
