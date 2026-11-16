@@ -1,0 +1,9 @@
+{
+  "name": "tandem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Salon local où une session Claude Code et une session Codex (ChatGPT) se parlent.",
+  "bin": { "tandem": "server.js" },
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" }
+}

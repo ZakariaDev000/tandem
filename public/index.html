@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%23f6efe2'/%3E%3Crect x='1' y='2' width='3' height='4' fill='%23d9643a'/%3E%3Crect x='4' y='2' width='3' height='4' fill='%231f8f7d'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><i></i><i></i></span>
+    <strong>Tandem</strong>
+  </div>
+  <nav id="rooms" class="rooms" aria-label="Salons"></nav>
+  <button id="new-room" class="btn">+ Nouveau salon</button>
+</header>
+
+<main id="app" class="app">
+  <section class="stage" aria-label="Bureau">
+    <div id="office" class="office">
+      <canvas id="scene" width="256" height="144" aria-hidden="true"></canvas>
+      <div id="overlay" class="overlay"></div>
+    </div>
+    <p class="hint">Clique sur un personnage pour lui écrire.</p>
+  </section>
+
+  <section class="chat" aria-label="Conversation">
+    <div class="chat-head">
+      <div class="chat-title">
+        <h1 id="room-title"></h1>
+        <p id="room-cwd" class="cwd"></p>
+      </div>
+      <button id="delete" class="btn small ghost" title="Supprimer ce salon" aria-label="Supprimer ce salon">✕</button>
+      <div class="chat-controls">
+        <span id="status" class="status"></span>
+        <button id="pause" class="btn small" hidden>Pause</button>
+        <button id="stop" class="btn small danger" hidden>Arrêter</button>
+      </div>
+    </div>
+    <div id="thread" class="thread" aria-live="polite"></div>
+    <form id="composer" class="composer">
+      <div class="targets" role="radiogroup" aria-label="Destinataire">
+        <button type="button" role="radio" data-to="both" aria-checked="true">Aux deux</button>
+        <button type="button" role="radio" data-to="claude" aria-checked="false">Claude</button>
+        <button type="button" role="radio" data-to="chatgpt" aria-checked="false">ChatGPT</button>
+      </div>
+      <div class="row">
+        <textarea id="input" rows="2" placeholder="Explique ce que tu veux qu'ils fassent ensemble" aria-label="Message"></textarea>
+        <button id="send" class="btn primary" type="submit" aria-label="Envoyer">↑</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<section id="empty" class="empty" hidden>
+  <h1>Ouvre ton premier salon</h1>
+  <p>Un salon réunit Claude et ChatGPT autour d'un sujet. Ils se parlent, travaillent, et s'arrêtent quand ils n'ont plus rien à se demander.</p>
+  <button id="empty-new" class="btn primary">Créer un salon</button>
+</section>
+
+<dialog id="dialog">
+  <form id="room-form" method="dialog">
+    <h2>Nouveau salon</h2>
+    <label>Sujet
+      <input id="f-title" type="text" placeholder="Refonte de la page d'accueil" autocomplete="off">
+    </label>
+    <label>Dossier de travail
+      <span class="folder">
+        <input id="f-cwd" type="text" placeholder="Aucun : simple discussion" autocomplete="off" spellcheck="false">
+        <button type="button" id="f-pick" class="btn small">Choisir…</button>
+      </span>
+    </label>
+    <fieldset>
+      <legend>Droits sur ce dossier</legend>
+      <label class="radio"><input type="radio" name="access" value="write" checked> Lire et modifier les fichiers</label>
+      <label class="radio"><input type="radio" name="access" value="read"> Lire seulement</label>
+    </fieldset>
+    <p id="f-error" class="error" hidden></p>
+    <div class="actions">
+      <button type="button" id="f-cancel" class="btn">Annuler</button>
+      <button type="submit" class="btn primary">Créer le salon</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="office.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
