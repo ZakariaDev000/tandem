@@ -62,10 +62,22 @@ Avec la mise à jour automatique, le code publié sur `main` s'exécute sur votr
 
 | Réglage | Claude | ChatGPT |
 |---|---|---|
-| Lire et modifier | Modifie les fichiers du dossier. Ne lance que des commandes sans risque. | Travaille dans le bac à sable de Codex, limité au dossier. |
-| Lire seulement | Ni modification ni commande. | Bac à sable en lecture seule. |
+| Lire et modifier | Modifie les fichiers du dossier et lance les commandes sans risque. Pour le reste, vous demande la permission. | Travaille dans le bac à sable de Codex, limité au dossier. |
+| Lire seulement | Ni modification ni commande, sans rien demander. | Bac à sable en lecture seule. |
 
 Un salon sans dossier reçoit un dossier vide rien qu'à lui, dans `data/workspaces/`.
+
+### Quand Claude demande la permission
+
+Dans un salon où il peut lire et modifier, Claude fait seul ce qui est sans risque : lire, modifier les fichiers du dossier, lancer une commande qui ne change rien. Pour tout le reste (lancer les tests, installer un paquet, écrire hors du dossier, ouvrir une page web), une carte apparaît dans la conversation. Elle montre la commande ou le fichier exact, et Claude attend votre réponse, aussi longtemps qu'il le faut :
+
+- **Autoriser** : cette fois seulement.
+- **Toujours autoriser dans ce salon** : cette fois, puis chaque fois que Claude redemandera exactement la même chose dans ce salon, sans nouvelle carte. Une autre commande, même voisine, sera redemandée. La liste de ce que vous avez autorisé ainsi s'affiche sous le titre du salon ; le ✕ retire une autorisation.
+- **Refuser** : Claude est prévenu et continue sans cette action.
+
+Votre réponse laisse une ligne dans la conversation. Tant qu'une demande attend, l'en-tête du salon le dit et son onglet clignote en orange. La pause ne répond pas à votre place ; arrêter le salon ou le supprimer annule la demande.
+
+ChatGPT ne pose pas de question : le bac à sable de Codex décide pour lui.
 
 ## Sécurité
 
@@ -101,6 +113,7 @@ Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité ; [
 | [`src/protocol.js`](src/protocol.js) | Les consignes données aux IA et la lecture du destinataire de leurs réponses. |
 | [`src/conductor.js`](src/conductor.js) | Le chef d'orchestre : à qui le tour, transmission des messages, pause et arrêt. |
 | [`src/agents/`](src/agents) | Un adaptateur par IA (`claude.js`, `codex.js`) et le lanceur commun (`runner.js`). |
+| [`src/approvals.js`](src/approvals.js) | Les demandes de permission d'une IA : celles qui attendent votre réponse, et ce que vous avez autorisé pour de bon. |
 | [`src/images.js`](src/images.js) | Repère les images créées pendant un tour et en garde une copie. |
 | [`src/events.js`](src/events.js) | Diffusion en direct vers la page (Server-Sent Events). |
 | [`src/updater.js`](src/updater.js) | Vérifie et installe les mises à jour ; [`src/supervisor.js`](src/supervisor.js) relance l'appli ensuite. |
@@ -116,7 +129,7 @@ Une IA est décrite par un adaptateur dans `src/agents/` : la commande à lancer
 ## Limites connues
 
 - Arrêter une IA prend quelques secondes, le temps que son outil se ferme.
-- Claude ne lance pas de commandes qui modifient le système (tests, installation) : il n'y a pas encore de niveau de droits plus large.
+- Une demande de permission de Claude n'apparaît que dans la page : tant que personne n'y répond, son tour attend.
 - Tandem pilote les sessions qu'il lance lui-même. Il ne se branche pas sur une session déjà ouverte dans une autre application.
 
 ## Licence
