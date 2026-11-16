@@ -17,6 +17,9 @@ function folderLabel(room) {
 function roomStatus(room) {
   const last = room.messages[room.messages.length - 1];
   if (room.stopping) return { text: t('status.stopping') };
+  // Tant qu'une demande d'autorisation attend, c'est à la personne de jouer.
+  const [asking] = room.approvals;
+  if (asking) return { text: t('status.asking', { name: displayName(asking.agent) }), tone: asking.agent };
   // Un agent seul donne sa couleur à l'étiquette ; à deux, elle reste neutre.
   if (room.running.length === 1) return { text: t('status.working', { name: displayName(room.running[0]) }), tone: room.running[0] };
   if (room.running.length > 1) return { text: t('status.workingTogether', { names: room.running.map(displayName).join(' + ') }) };

@@ -10,7 +10,8 @@ export function createRoomTabs({ store, onSelect }) {
     const button = document.createElement('button');
     button.setAttribute('aria-current', room.id === store.currentId ? 'true' : 'false');
     const dot = document.createElement('span');
-    dot.className = 'dot' + (room.running.length ? ' on' : '');
+    // Une demande d'autorisation qui attend se voit depuis un autre salon.
+    dot.className = 'dot' + (room.approvals.length ? ' ask' : room.running.length ? ' on' : '');
     button.append(dot, room.title);
     button.addEventListener('click', () => onSelect(room.id));
     return button;
