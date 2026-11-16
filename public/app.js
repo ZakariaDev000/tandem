@@ -1,14 +1,17 @@
 // Tandem — le chat et le lien avec le serveur local.
 (function () {
   const $ = (id) => document.getElementById(id);
-  const NAME = { zak: 'Toi', claude: 'Claude', chatgpt: 'ChatGPT' };
-  const INITIAL = { zak: 'Z', claude: 'C', chatgpt: 'G' };
+  const { t, lang } = window.i18n;
+  window.i18n.apply();
+
+  const displayName = (id) => (id === 'user' ? t('office.you') : id === 'claude' ? 'Claude' : 'ChatGPT');
+  const INITIAL = { user: lang === 'fr' ? 'T' : 'Y', claude: 'C', chatgpt: 'G' };
 
   const office = window.createOffice($('scene'), $('overlay'));
   const rooms = new Map();
   let currentId = null;
   let target = 'both';
-  const live = {}; // dernière action en cours, par salon
+  const liveAction = {}; // dernière action en cours, par salon
 
   const remember = (id) => {
     try {
@@ -30,13 +33,17 @@
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'La demande a échoué.');
+    if (!res.ok) {
+      // Le serveur renvoie un code d'erreur ; la page le dit dans la langue de la personne.
+      const known = t('error.' + data.error);
+      throw new Error(known !== 'error.' + data.error ? known : data.message || t('error.generic'));
+    }
     return data;
   }
 
   // ---------- Texte des messages ----------
 
-  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
   function inline(s) {
     return esc(s)
@@ -89,29 +96,45 @@
     return out.join('');
   }
 
+  /** Met une action en mots. Les anciens salons gardent leurs actions déjà rédigées. */
+  function actionText(action) {
+    if (!action) return '';
+    if (typeof action === 'string') return action;
+    if (action.verb === 'edit' && !action.target) return t('action.editFiles');
+    return t('action.' + action.verb, { target: action.target });
+  }
+
+  function systemText(m) {
+    if (m.code === 'stopped') return t('system.stopped', { name: displayName(m.agent) });
+    if (m.code === 'failed') return t('system.failed', { name: displayName(m.agent), detail: m.detail || '' });
+    return m.text || '';
+  }
+
   const toLabel = (m) => {
-    if (m.from === 'zak') return m.to === 'both' ? 'aux deux' : 'à ' + NAME[m.to];
-    return m.to === 'zak' ? 'à toi' : 'à ' + NAME[m.to];
+    if (m.to === 'both') return t('to.both');
+    if (m.to === 'user') return t('to.you');
+    return t('to.name', { name: displayName(m.to) });
   };
-  const clock = (ts) => new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const clock = (ts) => new Date(ts).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
 
   function messageEl(m) {
     const el = document.createElement('div');
     if (m.from === 'system') {
       el.className = 'sys' + (m.kind === 'error' ? ' error' : '');
-      el.textContent = m.text;
+      el.textContent = systemText(m);
       return el;
     }
     el.className = 'msg';
-    const acts = m.actions && m.actions.length
-      ? `<details class="actions-done"><summary>${m.actions.length} action${m.actions.length > 1 ? 's' : ''}</summary><ul>${m.actions.map((a) => '<li>' + esc(a) + '</li>').join('')}</ul></details>`
+    const count = m.actions ? m.actions.length : 0;
+    const acts = count
+      ? `<details class="actions-done"><summary>${count === 1 ? t('actions.one') : t('actions.many', { n: count })}</summary><ul>${m.actions.map((a) => '<li>' + esc(actionText(a)) + '</li>').join('')}</ul></details>`
       : '';
     const imgs = m.images && m.images.length
-      ? `<div class="images">${m.images.map((im) => `<a href="${esc(im.url)}" target="_blank" rel="noopener" title="Ouvrir ${esc(im.name)} en grand"><img src="${esc(im.url)}" alt="${esc(im.name)}" loading="lazy"><span>${esc(im.name)}</span></a>`).join('')}</div>`
+      ? `<div class="images">${m.images.map((im) => `<a href="${esc(im.url)}" target="_blank" rel="noopener" title="${esc(t('image.open', { name: im.name }))}"><img src="${esc(im.url)}" alt="${esc(im.name)}" loading="lazy"><span>${esc(im.name)}</span></a>`).join('')}</div>`
       : '';
     el.innerHTML = `<div class="avatar ${m.from}" aria-hidden="true">${INITIAL[m.from]}</div>
       <div class="body">
-        <div class="who">${NAME[m.from]} <span class="to">→ ${toLabel(m)}</span><time>${clock(m.ts)}</time></div>
+        <div class="who">${esc(displayName(m.from))} <span class="to">→ ${esc(toLabel(m))}</span><time>${clock(m.ts)}</time></div>
         <div class="text">${render(m.text)}</div>${imgs}${acts}
       </div>`;
     // Une image qui finit de charger allonge le fil : on reste en bas.
@@ -125,11 +148,12 @@
     return !!room.running || room.queue.length > 0;
   }
 
+  const newestFirst = () => [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt);
+
   function renderRooms() {
     const nav = $('rooms');
     nav.textContent = '';
-    const list = [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt);
-    for (const room of list) {
+    for (const room of newestFirst()) {
       const b = document.createElement('button');
       b.setAttribute('aria-current', room.id === currentId ? 'true' : 'false');
       const dot = document.createElement('span');
@@ -148,22 +172,22 @@
     if (!room) return;
     $('room-title').textContent = room.title;
     const tail = room.cwd.split('/').filter(Boolean).slice(-2).join('/');
-    $('room-cwd').textContent = room.ownFolder ? 'Simple discussion, sans dossier' : '…/' + tail + (room.access === 'read' ? ' · lecture seule' : '');
+    $('room-cwd').textContent = room.ownFolder ? t('room.noFolder') : '…/' + tail + (room.access === 'read' ? ' · ' + t('room.readOnly') : '');
     $('room-cwd').title = room.cwd;
     const st = $('status');
     const last = room.messages[room.messages.length - 1];
     st.className = 'status';
-    if (room.stopping) st.textContent = 'Arrêt en cours…';
+    if (room.stopping) st.textContent = t('status.stopping');
     else if (room.running) {
-      st.textContent = NAME[room.running] + ' travaille…';
+      st.textContent = t('status.working', { name: displayName(room.running) });
       st.classList.add(room.running);
-    } else if (room.paused && room.queue.length) st.textContent = 'En pause';
-    else if (last && last.from !== 'zak' && last.from !== 'system' && last.to === 'zak') {
-      st.textContent = 'Échange terminé';
+    } else if (room.paused && room.queue.length) st.textContent = t('status.paused');
+    else if (last && last.from !== 'user' && last.from !== 'system' && last.to === 'user') {
+      st.textContent = t('status.done');
       st.classList.add('done');
-    } else st.textContent = room.messages.length ? 'En attente' : 'Prêt';
+    } else st.textContent = room.messages.length ? t('status.waiting') : t('status.ready');
     $('pause').hidden = !busy(room) || room.stopping;
-    $('pause').textContent = room.paused ? 'Reprendre' : 'Pause';
+    $('pause').textContent = room.paused ? t('control.resume') : t('control.pause');
     $('stop').hidden = !busy(room) || room.stopping;
   }
 
@@ -181,12 +205,12 @@
       row.innerHTML = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span></span>';
     }
     thread.append(row);
-    row.lastChild.textContent = NAME[room.running] + ' : ' + (live[room.id] || 'réfléchit…');
+    row.lastChild.textContent = displayName(room.running) + ' : ' + (actionText(liveAction[room.id]) || t('office.thinking'));
   }
 
   function scrollDown() {
-    const t = $('thread');
-    t.scrollTop = t.scrollHeight;
+    const thread = $('thread');
+    thread.scrollTop = thread.scrollHeight;
   }
 
   function renderThread() {
@@ -197,7 +221,7 @@
     if (!room.messages.length) {
       const e = document.createElement('p');
       e.className = 'thread-empty';
-      e.textContent = 'Écris ta demande ci-dessous. Claude et ChatGPT se répartissent le travail et te préviennent quand ils ont fini.';
+      e.textContent = t('chat.empty');
       thread.append(e);
     }
     for (const m of room.messages) thread.append(messageEl(m));
@@ -209,7 +233,7 @@
     const room = rooms.get(currentId);
     for (const id of ['claude', 'chatgpt']) {
       const on = !!room && room.running === id;
-      office.setWorking(id, on, on ? live[room.id] || '' : '');
+      office.setWorking(id, on, on ? actionText(liveAction[room.id]) : '');
     }
   }
 
@@ -225,10 +249,10 @@
     if (id) $('input').focus();
   }
 
-  function setTarget(t) {
-    target = t;
-    for (const b of document.querySelectorAll('.targets button')) b.setAttribute('aria-checked', String(b.dataset.to === t));
-    office.setTarget(t);
+  function setTarget(next) {
+    target = next;
+    for (const b of document.querySelectorAll('.targets button')) b.setAttribute('aria-checked', String(b.dataset.to === next));
+    office.setTarget(next);
   }
 
   // ---------- Événements du serveur ----------
@@ -240,7 +264,7 @@
       rooms.clear();
       for (const r of data.rooms) rooms.set(r.id, r);
       const wanted = currentId || recall();
-      const first = [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt)[0];
+      const first = newestFirst()[0];
       select(rooms.has(wanted) ? wanted : first ? first.id : null);
     });
     es.addEventListener('room-created', (e) => {
@@ -253,7 +277,7 @@
       const { id } = JSON.parse(e.data);
       rooms.delete(id);
       if (id === currentId) {
-        const first = [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt)[0];
+        const first = newestFirst()[0];
         select(first ? first.id : null);
       } else renderRooms();
     });
@@ -263,7 +287,7 @@
       if (!room) return;
       const was = room.running;
       Object.assign(room, meta);
-      if (was !== room.running) live[room.id] = '';
+      if (was !== room.running) liveAction[room.id] = null;
       renderRooms();
       if (room.id === currentId) {
         renderHead();
@@ -291,10 +315,10 @@
       }
     });
     es.addEventListener('activity', (e) => {
-      const { roomId, agent, text } = JSON.parse(e.data);
-      live[roomId] = text;
+      const { roomId, agent, action } = JSON.parse(e.data);
+      liveAction[roomId] = action;
       if (roomId !== currentId) return;
-      office.setWorking(agent, true, text);
+      office.setWorking(agent, true, actionText(action));
       renderLive();
     });
   }
@@ -345,8 +369,8 @@
   $('delete').addEventListener('click', () => {
     const room = rooms.get(currentId);
     if (!room) return;
-    const note = room.ownFolder ? '' : '\nLe dossier de travail et ses fichiers ne sont pas touchés.';
-    if (confirm(`Supprimer le salon « ${room.title} » et sa conversation ?${note}`)) {
+    const note = room.ownFolder ? '' : '\n' + t('delete.keepFolder');
+    if (confirm(t('delete.confirm', { title: room.title }) + note)) {
       api('DELETE', `/api/rooms/${room.id}`).catch((e) => alert(e.message));
     }
   });
@@ -364,15 +388,16 @@
   $('f-cancel').addEventListener('click', () => dialog.close());
   $('f-pick').addEventListener('click', async () => {
     try {
-      const { path } = await api('POST', '/api/pick-folder');
+      const { path } = await api('POST', '/api/pick-folder', { prompt: t('dialog.pickPrompt') });
       if (path) $('f-cwd').value = path;
     } catch {}
   });
   $('room-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
+      const date = new Date().toLocaleDateString(lang, { day: 'numeric', month: 'long' });
       const room = await api('POST', '/api/rooms', {
-        title: $('f-title').value,
+        title: $('f-title').value.trim() || t('room.defaultTitle', { date }),
         cwd: $('f-cwd').value,
         access: new FormData($('room-form')).get('access'),
       });

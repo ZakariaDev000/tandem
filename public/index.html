@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,78 +13,79 @@
     <span class="logo" aria-hidden="true"><i></i><i></i></span>
     <strong>Tandem</strong>
   </div>
-  <nav id="rooms" class="rooms" aria-label="Salons"></nav>
-  <button id="new-room" class="btn">+ Nouveau salon</button>
+  <nav id="rooms" class="rooms" data-i18n-aria-label="rooms.label" aria-label="Rooms"></nav>
+  <button id="new-room" class="btn" data-i18n="room.new">+ New room</button>
 </header>
 
 <main id="app" class="app">
-  <section class="stage" aria-label="Bureau">
+  <section class="stage" data-i18n-aria-label="office.label" aria-label="Office">
     <div id="office" class="office">
       <canvas id="scene" width="256" height="144" aria-hidden="true"></canvas>
       <div id="overlay" class="overlay"></div>
     </div>
-    <p class="hint">Clique sur un personnage pour lui écrire.</p>
+    <p class="hint" data-i18n="office.hint">Click a character to write to them.</p>
   </section>
 
-  <section class="chat" aria-label="Conversation">
+  <section class="chat" data-i18n-aria-label="chat.label" aria-label="Conversation">
     <div class="chat-head">
       <div class="chat-title">
         <h1 id="room-title"></h1>
         <p id="room-cwd" class="cwd"></p>
       </div>
-      <button id="delete" class="btn small ghost" title="Supprimer ce salon" aria-label="Supprimer ce salon">✕</button>
+      <button id="delete" class="btn small ghost" data-i18n-title="room.delete" data-i18n-aria-label="room.delete" title="Delete this room" aria-label="Delete this room">✕</button>
       <div class="chat-controls">
         <span id="status" class="status"></span>
         <button id="pause" class="btn small" hidden>Pause</button>
-        <button id="stop" class="btn small danger" hidden>Arrêter</button>
+        <button id="stop" class="btn small danger" data-i18n="control.stop" hidden>Stop</button>
       </div>
     </div>
     <div id="thread" class="thread" aria-live="polite"></div>
     <form id="composer" class="composer">
-      <div class="targets" role="radiogroup" aria-label="Destinataire">
-        <button type="button" role="radio" data-to="both" aria-checked="true">Aux deux</button>
+      <div class="targets" role="radiogroup" data-i18n-aria-label="target.label" aria-label="Recipient">
+        <button type="button" role="radio" data-to="both" aria-checked="true" data-i18n="target.both">Both</button>
         <button type="button" role="radio" data-to="claude" aria-checked="false">Claude</button>
         <button type="button" role="radio" data-to="chatgpt" aria-checked="false">ChatGPT</button>
       </div>
       <div class="row">
-        <textarea id="input" rows="2" placeholder="Explique ce que tu veux qu'ils fassent ensemble" aria-label="Message"></textarea>
-        <button id="send" class="btn primary" type="submit" aria-label="Envoyer">↑</button>
+        <textarea id="input" rows="2" data-i18n-placeholder="input.placeholder" data-i18n-aria-label="input.label" placeholder="Explain what you want them to do together" aria-label="Message"></textarea>
+        <button id="send" class="btn primary" type="submit" data-i18n-aria-label="input.send" aria-label="Send">↑</button>
       </div>
     </form>
   </section>
 </main>
 
 <section id="empty" class="empty" hidden>
-  <h1>Ouvre ton premier salon</h1>
-  <p>Un salon réunit Claude et ChatGPT autour d'un sujet. Ils se parlent, travaillent, et s'arrêtent quand ils n'ont plus rien à se demander.</p>
-  <button id="empty-new" class="btn primary">Créer un salon</button>
+  <h1 data-i18n="empty.title">Open your first room</h1>
+  <p data-i18n="empty.body">A room brings Claude and ChatGPT together around one topic. They talk, work, and stop when they have nothing left to ask each other.</p>
+  <button id="empty-new" class="btn primary" data-i18n="empty.create">Create a room</button>
 </section>
 
 <dialog id="dialog">
   <form id="room-form" method="dialog">
-    <h2>Nouveau salon</h2>
-    <label>Sujet
-      <input id="f-title" type="text" placeholder="Refonte de la page d'accueil" autocomplete="off">
+    <h2 data-i18n="dialog.title">New room</h2>
+    <label><span data-i18n="dialog.topic">Topic</span>
+      <input id="f-title" type="text" data-i18n-placeholder="dialog.topicExample" placeholder="Homepage redesign" autocomplete="off">
     </label>
-    <label>Dossier de travail
+    <label><span data-i18n="dialog.folder">Working folder</span>
       <span class="folder">
-        <input id="f-cwd" type="text" placeholder="Aucun : simple discussion" autocomplete="off" spellcheck="false">
-        <button type="button" id="f-pick" class="btn small">Choisir…</button>
+        <input id="f-cwd" type="text" data-i18n-placeholder="dialog.folderNone" placeholder="None: just a discussion" autocomplete="off" spellcheck="false">
+        <button type="button" id="f-pick" class="btn small" data-i18n="dialog.pick">Choose…</button>
       </span>
     </label>
     <fieldset>
-      <legend>Droits sur ce dossier</legend>
-      <label class="radio"><input type="radio" name="access" value="write" checked> Lire et modifier les fichiers</label>
-      <label class="radio"><input type="radio" name="access" value="read"> Lire seulement</label>
+      <legend data-i18n="dialog.access">Access to this folder</legend>
+      <label class="radio"><input type="radio" name="access" value="write" checked> <span data-i18n="dialog.accessWrite">Read and edit files</span></label>
+      <label class="radio"><input type="radio" name="access" value="read"> <span data-i18n="dialog.accessRead">Read only</span></label>
     </fieldset>
     <p id="f-error" class="error" hidden></p>
     <div class="actions">
-      <button type="button" id="f-cancel" class="btn">Annuler</button>
-      <button type="submit" class="btn primary">Créer le salon</button>
+      <button type="button" id="f-cancel" class="btn" data-i18n="dialog.cancel">Cancel</button>
+      <button type="submit" class="btn primary" data-i18n="dialog.create">Create room</button>
     </div>
   </form>
 </dialog>
 
+<script src="i18n.js"></script>
 <script src="office.js"></script>
 <script src="app.js"></script>
 </body>

@@ -82,7 +82,7 @@ function collectImages(room, agent, before, startedAt, session, msgId) {
   return images;
 }
 
-const NAME = { zak: 'Zak', claude: 'Claude', chatgpt: 'ChatGPT' };
+const NAME = { user: 'User', claude: 'Claude', chatgpt: 'ChatGPT' };
 const OTHER = { claude: 'chatgpt', chatgpt: 'claude' };
 
 // ---------- Localisation des deux outils ----------
@@ -121,10 +121,17 @@ function loadRooms() {
       r.queue = [];
       r.paused = false;
       rooms.set(r.id, r);
-      // A room without a project keeps its files inside this app's data folder.
-      // If the app was moved, follow it: the stored absolute path is stale, and the
-      // agent sessions were tied to the old folder, so each agent starts a fresh
-      // session and is handed the whole conversation again on its next turn.
+      // Les premiers salons appelaient l'humain « zak » : on passe à l'identifiant neutre « user ».
+      let migrated = false;
+      for (const m of r.messages) {
+        if (m.from === 'zak') (m.from = 'user'), (migrated = true);
+        if (m.to === 'zak') (m.to = 'user'), (migrated = true);
+      }
+      if (migrated) saveRoom(r);
+      // Un salon sans projet range ses fichiers dans le dossier de données de l'appli.
+      // Si l'appli a été déplacée, on la suit : le chemin enregistré n'est plus bon, et
+      // les sessions des IA étaient liées à l'ancien dossier. Chaque IA repart donc sur
+      // une session neuve et reçoit toute la conversation à son prochain tour.
       if (r.ownFolder) {
         const here = path.join(WORK_DIR, r.id);
         if (r.cwd !== here) {
@@ -136,7 +143,7 @@ function loadRooms() {
         }
       }
     } catch (e) {
-      console.error('Salon illisible :', f, e.message);
+      console.error('Unreadable room file:', f, e.message);
     }
   }
 }
@@ -193,26 +200,26 @@ function rules(room, agent) {
   const other = OTHER[agent];
   const access =
     room.access === 'read'
-      ? 'Tu peux lire les fichiers du dossier de travail mais pas les modifier.'
-      : 'Tu peux lire et modifier les fichiers du dossier de travail, et rien en dehors.';
+      ? 'You may read the files in the working folder but not change them.'
+      : 'You may read and change the files in the working folder, and nothing outside it.';
   return [
-    `Tu es ${NAME[agent]} dans « Tandem », un salon local où tu travailles avec ${NAME[other]} (une autre IA, dans sa propre session) et Zak (l'humain).`,
-    `À chaque tour, on te transmet les nouveaux messages du salon. ${NAME[other]} ne voit que ce que tu écris dans ta réponse finale, pas tes outils ni ce que tu as lu : donne-lui les détails utiles.`,
-    `Vous partagez le même dossier de travail (${room.cwd}), qui est ton dossier courant : cite les fichiers par leur chemin relatif. ${access}`,
-    'Règles du salon :',
-    `1. Écris ton message normalement, en français, court et concret.`,
-    `2. Termine TOUJOURS par une dernière ligne seule : [[à: ${other}]] si tu attends une réponse ou une action de ${NAME[other]}, ou [[à: zak]] si le travail est fini, si tu as besoin de Zak, ou s'il n'y a plus rien à demander.`,
-    `3. Ne relance pas ${NAME[other]} par politesse ou pour confirmer : s'il ne reste rien à faire, adresse-toi à Zak et l'échange s'arrête.`,
+    `You are ${NAME[agent]} in "Tandem", a local room where you work with ${NAME[other]} (another AI, in its own session) and the user (a human).`,
+    `Each turn you receive the new messages from the room. ${NAME[other]} only sees what you write in your final reply, not your tools or what you read, so include the details it needs.`,
+    `You both share the same working folder (${room.cwd}), which is your current directory: refer to files by their relative path. ${access}`,
+    'Room rules:',
+    `1. Write your message normally, short and concrete, in the language the user writes in.`,
+    `2. ALWAYS end with a final line on its own: [[to: ${other}]] if you expect a reply or an action from ${NAME[other]}, or [[to: user]] if the work is done, if you need the user, or if there is nothing left to ask.`,
+    `3. Do not message ${NAME[other]} out of politeness or just to confirm: if nothing is left to do, address the user and the exchange stops.`,
     agent === 'chatgpt'
-      ? `4. Tu sais générer des images avec ton outil intégré. Quand on t'en demande une, crée-la, enregistre-la dans le dossier de travail et cite son nom de fichier : le salon l'affiche tout seul à Zak.`
-      : `4. ChatGPT sait générer des images (logo, bannière, illustration) : demande-les-lui quand il en faut. Tu peux ensuite ouvrir le fichier pour le regarder et demander une retouche. Les images créées dans le dossier de travail s'affichent toutes seules à Zak.`,
+      ? `4. You can generate images with your built-in tool. When asked for one, create it, save it in the working folder and mention its file name: the room shows it to the user automatically.`
+      : `4. ChatGPT can generate images (logo, banner, illustration): ask it when one is needed. You can then open the file to look at it and ask for changes. Images created in the working folder are shown to the user automatically.`,
   ].join('\n');
 }
 
 function toLabel(to, reader) {
-  if (to === 'both') return 'à tous';
-  if (to === reader) return 'à toi';
-  return 'à ' + NAME[to];
+  if (to === 'both') return 'to everyone';
+  if (to === reader) return 'to you';
+  return 'to ' + NAME[to];
 }
 
 function buildPrompt(room, agent) {
@@ -223,24 +230,25 @@ function buildPrompt(room, agent) {
   const other = OTHER[agent];
   const parts = [];
   if (agent === 'chatgpt' && !room.sessions.chatgpt) parts.push(rules(room, agent), '');
-  parts.push('Nouveaux messages du salon :', '');
+  parts.push('New messages in the room:', '');
   for (const m of fresh) parts.push(`### ${NAME[m.from]} (${toLabel(m.to, agent)})`, m.text, '');
   parts.push(
     '---',
-    `À toi. Rappel : termine par une dernière ligne seule, [[à: ${other}]] ou [[à: zak]].`
+    `Your turn. Reminder: end with a final line on its own, [[to: ${other}]] or [[to: user]].`
   );
   return parts.join('\n');
 }
 
-const ROUTE = /\[\[\s*[àa]\s*:\s*(claude|chatgpt|zak)\s*\]\]/gi;
+// « à » et « zak » restent acceptés : ce sont les balises des premières versions.
+const ROUTE = /\[\[\s*(?:to|à|a)\s*:\s*(claude|chatgpt|user|zak)\s*\]\]/gi;
 function parseReply(agent, raw) {
-  let to = 'zak';
+  let to = 'user';
   let m;
   ROUTE.lastIndex = 0;
   while ((m = ROUTE.exec(raw))) to = m[1].toLowerCase();
-  if (to === agent) to = 'zak';
+  if (to === agent || to === 'zak') to = 'user';
   const text = raw.replace(ROUTE, '').trim();
-  return { to, text: text || '(message vide)' };
+  return { to, text: text || '(empty message)' };
 }
 
 // ---------- Lancement d'un tour ----------
@@ -251,25 +259,27 @@ function short(s, n = 70) {
 }
 const base = (p) => (p ? path.basename(String(p)) : '');
 
+// Chaque action est décrite par un verbe et une cible : c'est la page qui la met en mots,
+// dans la langue de la personne qui regarde.
 function describeClaudeTool(name, input = {}) {
   switch (name) {
     case 'Read':
-      return 'Lit ' + base(input.file_path);
+      return { verb: 'read', target: base(input.file_path) };
     case 'Edit':
     case 'Write':
     case 'NotebookEdit':
-      return 'Modifie ' + base(input.file_path || input.notebook_path);
+      return { verb: 'edit', target: base(input.file_path || input.notebook_path) };
     case 'Bash':
-      return 'Lance : ' + short(input.description || input.command, 60);
+      return { verb: 'run', target: short(input.description || input.command, 60) };
     case 'Grep':
     case 'Glob':
-      return 'Cherche ' + short(input.pattern, 50);
+      return { verb: 'search', target: short(input.pattern, 50) };
     case 'WebSearch':
-      return 'Cherche sur le web : ' + short(input.query, 50);
+      return { verb: 'web', target: short(input.query, 50) };
     case 'WebFetch':
-      return 'Ouvre ' + short(input.url, 50);
+      return { verb: 'open', target: short(input.url, 50) };
     default:
-      return 'Utilise ' + name;
+      return { verb: 'tool', target: name };
   }
 }
 
@@ -278,16 +288,16 @@ function describeCodexItem(item) {
     case 'command_execution': {
       // Codex enveloppe chaque commande dans « /bin/zsh -lc '…' » : on ne garde que la commande.
       const cmd = String(item.command || '').replace(/^\S*\/(?:zsh|bash|sh)\s+-l?c\s+/, '').replace(/^(['"])([\s\S]*)\1$/, '$2');
-      return 'Lance : ' + short(cmd, 60);
+      return { verb: 'run', target: short(cmd, 60) };
     }
     case 'file_change': {
       const files = (item.changes || []).map((c) => base(c.path)).filter(Boolean);
-      return 'Modifie ' + (files.slice(0, 3).join(', ') || 'des fichiers');
+      return { verb: 'edit', target: files.slice(0, 3).join(', ') };
     }
     case 'web_search':
-      return 'Cherche sur le web : ' + short(item.query, 50);
+      return { verb: 'web', target: short(item.query, 50) };
     case 'mcp_tool_call':
-      return 'Utilise ' + (item.tool || 'un outil');
+      return { verb: 'tool', target: item.tool || 'MCP' };
     default:
       return null;
   }
@@ -314,7 +324,7 @@ function readJsonLines(stream, onLine) {
 function runAgent(room, agent, prompt, onActivity) {
   return new Promise((resolve, reject) => {
     const bin = BIN[agent];
-    if (!bin) return reject(new Error(`${agent === 'claude' ? 'Claude Code' : 'Codex'} est introuvable sur cette machine.`));
+    if (!bin) return reject(new Error(`${agent === 'claude' ? 'Claude Code' : 'Codex'} was not found on this machine.`));
     const session = room.sessions[agent];
     let args;
     let newSession = session;
@@ -366,7 +376,7 @@ function runAgent(room, agent, prompt, onActivity) {
             const d = describeCodexItem(item);
             if (d) onActivity(d);
           }
-        } else if (ev.type === 'turn.failed') failure = ev.error?.message || 'le tour a échoué';
+        } else if (ev.type === 'turn.failed') failure = ev.error?.message || 'the turn failed';
         else if (ev.type === 'error') failure = ev.message || 'erreur';
       }
     });
@@ -382,7 +392,7 @@ function runAgent(room, agent, prompt, onActivity) {
       if (failure && !text) return reject(new Error(short(failure, 400)));
       if (!text) {
         const tail = stderr.trim().split('\n').slice(-3).join(' ');
-        return reject(new Error(`Aucune réponse (code ${code ?? signal}). ${short(tail, 300)}`));
+        return reject(new Error(`No reply (exit ${code ?? signal}). ${short(tail, 300)}`));
       }
       resolve({ text, session: newSession });
     });
@@ -415,8 +425,9 @@ async function pump(room) {
   const startedAt = Date.now();
   try {
     const { text, session } = await runAgent(room, agent, prompt, (a) => {
-      if (actions[actions.length - 1] !== a) actions.push(a);
-      broadcast('activity', { roomId: room.id, agent, text: a });
+      const last = actions[actions.length - 1];
+      if (!last || last.verb !== a.verb || last.target !== a.target) actions.push(a);
+      broadcast('activity', { roomId: room.id, agent, action: a });
     });
     room.sessions[agent] = session;
     room.seen[agent] = upTo;
@@ -428,8 +439,8 @@ async function pump(room) {
   } catch (e) {
     room.queue = [];
     if (!rooms.has(room.id)) return;
-    if (e.stopped) addMessage(room, { from: 'system', kind: 'info', text: `Tu as arrêté ${NAME[agent]}.` });
-    else addMessage(room, { from: 'system', kind: 'error', text: `${NAME[agent]} n'a pas pu répondre. ${e.message}` });
+    if (e.stopped) addMessage(room, { from: 'system', kind: 'info', code: 'stopped', agent });
+    else addMessage(room, { from: 'system', kind: 'error', code: 'failed', agent, detail: e.message });
   }
   room.running = null;
   room.stopping = false;
@@ -464,13 +475,13 @@ function readBody(req) {
     req.setEncoding('utf8');
     req.on('data', (d) => {
       raw += d;
-      if (raw.length > 2e6) reject(new Error('trop long'));
+      if (raw.length > 2e6) reject(new Error('Request body too large.'));
     });
     req.on('end', () => {
       try {
         resolve(raw ? JSON.parse(raw) : {});
       } catch {
-        reject(new Error('JSON invalide'));
+        reject(new Error('Invalid JSON.'));
       }
     });
     req.on('error', reject);
@@ -489,13 +500,13 @@ const ALLOWED_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 const server = http.createServer(async (req, res) => {
   // Protection : la page n'est servie qu'à cette machine, et les actions exigent
   // un en-tête qu'un autre site ouvert dans le navigateur ne peut pas envoyer.
-  if (!ALLOWED_HOSTS.has(req.headers.host || '')) return send(res, 403, { error: 'Hôte refusé' });
+  if (!ALLOWED_HOSTS.has(req.headers.host || '')) return send(res, 403, { error: 'host_refused', message: 'Host not allowed.' });
   const url = new URL(req.url, `http://${req.headers.host}`);
   const seg = url.pathname.split('/').filter(Boolean);
 
   try {
     if (seg[0] === 'api') {
-      if (req.method !== 'GET' && req.headers['x-tandem'] !== '1') return send(res, 403, { error: 'Requête refusée' });
+      if (req.method !== 'GET' && req.headers['x-tandem'] !== '1') return send(res, 403, { error: 'forbidden', message: 'Request refused.' });
 
       if (req.method === 'GET' && seg[1] === 'events') {
         res.writeHead(200, {
@@ -519,7 +530,7 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'GET' && seg[1] === 'media' && seg.length === 4) {
         const file = path.join(MEDIA_DIR, path.basename(seg[2]), path.basename(decodeURIComponent(seg[3])));
         const type = MIME[path.extname(file)];
-        if (!type || !type.startsWith('image/') || !fs.existsSync(file)) return send(res, 404, { error: 'Image introuvable' });
+        if (!type || !type.startsWith('image/') || !fs.existsSync(file)) return send(res, 404, { error: 'image_not_found', message: 'Image not found.' });
         // « sandbox » empêche un fichier SVG ouvert seul d'exécuter du code sur cette page.
         res.writeHead(200, {
           'Content-Type': type,
@@ -531,9 +542,13 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.method === 'POST' && seg[1] === 'pick-folder') {
+        // Le titre de la fenêtre vient de la page, dans la langue de la personne. On n'y garde
+        // que des lettres, chiffres et espaces, car il est placé dans une commande AppleScript.
+        const body = await readBody(req);
+        const prompt = String(body.prompt || '').replace(/[^\p{L}\p{N} ,.'’-]/gu, '').replace(/'/g, '’').slice(0, 80) || 'Working folder';
         return execFile(
           'osascript',
-          ['-e', 'POSIX path of (choose folder with prompt "Dossier de travail du salon")'],
+          ['-e', `POSIX path of (choose folder with prompt "${prompt}")`],
           { timeout: 120000 },
           (err, stdout) => send(res, 200, { path: err ? null : stdout.trim().replace(/\/$/, '') })
         );
@@ -545,8 +560,8 @@ const server = http.createServer(async (req, res) => {
         let cwd = expandHome(body.cwd);
         let ownFolder = false;
         if (cwd) {
-          if (!path.isAbsolute(cwd)) return send(res, 400, { error: 'Donne le chemin complet du dossier.' });
-          if (!fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) return send(res, 400, { error: "Ce dossier n'existe pas." });
+          if (!path.isAbsolute(cwd)) return send(res, 400, { error: 'folder_relative', message: 'Give the full path of the folder.' });
+          if (!fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) return send(res, 400, { error: 'folder_missing', message: 'This folder does not exist.' });
         } else {
           cwd = path.join(WORK_DIR, id);
           fs.mkdirSync(cwd, { recursive: true });
@@ -554,7 +569,7 @@ const server = http.createServer(async (req, res) => {
         }
         const room = {
           id,
-          title: short(body.title, 60) || 'Salon du ' + new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }),
+          title: short(body.title, 60) || 'Untitled room',
           cwd,
           ownFolder,
           access: body.access === 'read' ? 'read' : 'write',
@@ -574,14 +589,14 @@ const server = http.createServer(async (req, res) => {
 
       if (seg[1] === 'rooms' && seg[2]) {
         const room = rooms.get(seg[2]);
-        if (!room) return send(res, 404, { error: 'Salon introuvable' });
+        if (!room) return send(res, 404, { error: 'room_not_found', message: 'Room not found.' });
 
         if (req.method === 'POST' && seg[3] === 'messages') {
           const body = await readBody(req);
           const text = String(body.text || '').trim();
           const to = ['both', 'claude', 'chatgpt'].includes(body.to) ? body.to : 'both';
-          if (!text) return send(res, 400, { error: 'Message vide' });
-          addMessage(room, { from: 'zak', to, text });
+          if (!text) return send(res, 400, { error: 'empty_message', message: 'The message is empty.' });
+          addMessage(room, { from: 'user', to, text });
           if (to === 'both') {
             enqueue(room, 'claude');
             enqueue(room, 'chatgpt');
@@ -632,29 +647,29 @@ const server = http.createServer(async (req, res) => {
           return send(res, 200, { ok: true });
         }
       }
-      return send(res, 404, { error: 'Introuvable' });
+      return send(res, 404, { error: 'not_found', message: 'Not found.' });
     }
 
     // Fichiers de la page
-    if (req.method !== 'GET') return send(res, 405, { error: 'Méthode refusée' });
+    if (req.method !== 'GET') return send(res, 405, { error: 'method_not_allowed', message: 'Method not allowed.' });
     const rel = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname.slice(1));
     const file = path.join(PUBLIC, rel);
     if (!file.startsWith(PUBLIC + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('Introuvable');
+      return res.end('Not found');
     }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     fs.createReadStream(file).pipe(res);
   } catch (e) {
-    send(res, 500, { error: e.message });
+    send(res, 500, { error: 'server_error', message: e.message });
   }
 });
 
 loadRooms();
 server.listen(PORT, HOST, () => {
-  console.log(`Tandem est ouvert sur http://localhost:${PORT}`);
-  console.log(`Claude Code : ${BIN.claude || 'introuvable'}`);
-  console.log(`Codex       : ${BIN.chatgpt || 'introuvable'}`);
+  console.log(`Tandem is running at http://localhost:${PORT}`);
+  console.log(`Claude Code : ${BIN.claude || 'not found'}`);
+  console.log(`Codex       : ${BIN.chatgpt || 'not found'}`);
 });
 
 function shutdown() {

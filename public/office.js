@@ -8,13 +8,13 @@
   const PAL = {
     claude: { h: '#7a3b1e', s: '#f1c9a5', e: '#2b2420', c: '#d9643a', d: '#b44d28', p: '#4a3b34', b: '#2b2420' },
     chatgpt: { h: '#1d2b2a', s: '#e3b58f', e: '#2b2420', c: '#1f8f7d', d: '#16705f', p: '#3a4652', b: '#2b2420' },
-    zak: { h: '#2b2420', s: '#c98f63', e: '#2b2420', c: '#2f4a7a', d: '#233a61', p: '#55606e', b: '#2b2420' },
+    user: { h: '#2b2420', s: '#c98f63', e: '#2b2420', c: '#2f4a7a', d: '#233a61', p: '#55606e', b: '#2b2420' },
   };
 
   const HEAD = {
     claude: ['....hhhh....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
     chatgpt: ['...hhhhhh...', '..hhhhhhhh..', '..dssssssd..', '..dsessesd..', '...ssssss...', '....ssss....'],
-    zak: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
+    user: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
   };
   const BODY = ['..cccccccc..', '.dccccccccd.', '.dccccccccd.', '.sccccccccs.', '..cccccccc..'];
   const BODY_TYPE = ['..cccccccc..', '.dccccccccd.', '.sccccccccs.', '..cccccccc..', '..cccccccc..'];
@@ -24,16 +24,17 @@
     ['...pppppp...', '...pp..pp...', '...pp..pp...', '...bb..pp...', '.......bb...'],
   ];
 
-  const HOME = { claude: { x: 64, y: 66 }, chatgpt: { x: 192, y: 66 }, zak: { x: 128, y: 128 } };
+  const HOME = { claude: { x: 64, y: 66 }, chatgpt: { x: 192, y: 66 }, user: { x: 128, y: 128 } };
   const EXIT = { claude: { x: 100, y: 66 }, chatgpt: { x: 156, y: 66 } };
   // Où se placer pour parler à quelqu'un, selon qui vient.
   const MEET = {
-    claude: { chatgpt: { x: 152, y: 92 }, zak: { x: 112, y: 126 } },
-    chatgpt: { claude: { x: 104, y: 92 }, zak: { x: 144, y: 126 } },
-    zak: { claude: { x: 104, y: 96 }, chatgpt: { x: 152, y: 96 }, both: { x: 128, y: 100 } },
+    claude: { chatgpt: { x: 152, y: 92 }, user: { x: 112, y: 126 } },
+    chatgpt: { claude: { x: 104, y: 92 }, user: { x: 144, y: 126 } },
+    user: { claude: { x: 104, y: 96 }, chatgpt: { x: 152, y: 96 }, both: { x: 128, y: 100 } },
   };
 
   function createOffice(canvas, overlay) {
+    const t = window.i18n.t;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -41,11 +42,11 @@
     let target = 'both';
 
     const actors = {};
-    for (const id of ['claude', 'chatgpt', 'zak']) {
+    for (const id of ['claude', 'chatgpt', 'user']) {
       const tag = document.createElement('div');
       tag.className = 'tag ' + id;
-      tag.textContent = id === 'zak' ? 'Toi' : id === 'claude' ? 'Claude' : 'ChatGPT';
-      if (id !== 'zak') tag.addEventListener('click', () => pick(id));
+      tag.textContent = id === 'user' ? t('office.you') : id === 'claude' ? 'Claude' : 'ChatGPT';
+      if (id !== 'user') tag.addEventListener('click', () => pick(id));
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
       overlay.append(bubble, tag);
@@ -215,7 +216,7 @@
     function drawActor(a, t) {
       const pal = PAL[a.id];
       const x = Math.round(a.pos.x) - 6;
-      const seated = a.id !== 'zak' && a.mode === 'home';
+      const seated = a.id !== 'user' && a.mode === 'home';
       if (seated) {
         const typing = a.working && Math.floor(t / 180) % 2;
         sprite(HEAD[a.id].concat(typing ? BODY_TYPE : BODY), pal, x, HOME[a.id].y - 15);
@@ -289,7 +290,7 @@
     }
 
     function place(a) {
-      const seated = a.id !== 'zak' && a.mode === 'home';
+      const seated = a.id !== 'user' && a.mode === 'home';
       const headY = seated ? HOME[a.id].y - 16 : a.pos.y - 17;
       const left = ((a.pos.x / W) * 100).toFixed(2) + '%';
       const top = ((headY / H) * 100).toFixed(2) + '%';
@@ -302,7 +303,7 @@
       let work = false;
       if ((a.mode === 'going' || a.mode === 'talking') && a.say) text = a.say;
       else if (a.working && a.mode === 'home') {
-        text = a.activity || 'réfléchit…';
+        text = a.activity || t('office.thinking');
         work = true;
       }
       const key = (work ? 'w:' : 's:' + a.lean + ':' + a.sayImage + ':') + text;
@@ -323,7 +324,7 @@
         a.bubble.classList.toggle('lean-left', !work && a.lean === 'left');
         a.bubble.classList.toggle('show', !!text);
       }
-      a.tag.classList.toggle('target', a.id !== 'zak' && (target === a.id || target === 'both'));
+      a.tag.classList.toggle('target', a.id !== 'user' && (target === a.id || target === 'both'));
     }
 
     let last = performance.now();
@@ -393,7 +394,7 @@
         a.say = clip(text);
         a.sayImage = image || '';
         const listener = HOME[to];
-        a.lean = !listener || from !== 'zak' && to === 'zak' ? '' : listener.x < spot.x ? 'right' : 'left';
+        a.lean = !listener || from !== 'user' && to === 'user' ? '' : listener.x < spot.x ? 'right' : 'left';
       },
       setWorking(id, working, activity) {
         const a = actors[id];
