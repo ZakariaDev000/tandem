@@ -3,6 +3,7 @@ import { t } from '../i18n/index.js';
 import { actionText, clock, displayName, initial, recipientLabel, systemText } from '../format.js';
 import { escapeHtml, renderMarkdown } from '../markdown.js';
 import { SYSTEM } from '../participants.js';
+import { attachedFilesHtml, attachedImages } from './message-attachments.js';
 
 function imagesHtml(images) {
   if (!images || !images.length) return '';
@@ -38,7 +39,7 @@ export function messageElement(message, { onImageLoad }) {
   el.innerHTML = `<div class="avatar ${message.from}" aria-hidden="true">${initial(message.from)}</div>
       <div class="body">
         <div class="who">${escapeHtml(displayName(message.from))} <span class="to">→ ${escapeHtml(recipientLabel(message))}</span><time>${clock(message.ts)}</time></div>
-        <div class="text">${renderMarkdown(message.text)}</div>${imagesHtml(message.images)}${actionsHtml(message.actions)}
+        <div class="text">${renderMarkdown(message.text)}</div>${imagesHtml([...(message.images || []), ...attachedImages(message)])}${attachedFilesHtml(message)}${actionsHtml(message.actions)}
       </div>`;
   for (const img of el.querySelectorAll('.images img')) img.addEventListener('load', onImageLoad, { once: true });
   return el;

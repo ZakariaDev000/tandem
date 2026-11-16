@@ -31,3 +31,10 @@ export function recipientLabel(message) {
 export const clock = (ts) => new Date(ts).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
 
 export const dayAndMonth = (date) => date.toLocaleDateString(lang, { day: 'numeric', month: 'long' });
+
+/** La taille d'un fichier, arrondie, avec l'unité de la langue. */
+export function fileSize(bytes) {
+  if (bytes < 1000) return t('size.bytes', { n: bytes });
+  if (bytes < 1e6) return t('size.kilobytes', { n: Math.round(bytes / 1000) });
+  return t('size.megabytes', { n: (bytes / 1e6).toLocaleString(lang, { maximumFractionDigits: 1 }) });
+}

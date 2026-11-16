@@ -9,6 +9,7 @@ import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
 import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
+import { attachedImages, attachmentNames } from './chat/message-attachments.js';
 import { initRoomDialog } from './chat/room-dialog.js';
 import { createRoomTabs } from './chat/tabs.js';
 import { createThread } from './chat/thread.js';
@@ -41,6 +42,7 @@ function select(id) {
   header.render();
   thread.render();
   syncOffice();
+  composer.showRoom();
   if (store.currentId) composer.focus();
 }
 
@@ -96,8 +98,9 @@ subscribe({
     header.render();
     thread.scrollDown();
     if (message.from !== SYSTEM) {
-      const image = message.images && message.images[0];
-      office.deliver(message.from, message.to, message.text, image ? image.url : null);
+      const image = [...(message.images || []), ...attachedImages(message)][0];
+      // Un message fait seulement de fichiers joints annonce leurs noms.
+      office.deliver(message.from, message.to, message.text || attachmentNames(message), image ? image.url : null);
     }
   },
 

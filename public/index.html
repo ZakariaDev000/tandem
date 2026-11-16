@@ -57,7 +57,14 @@
           <span data-i18n="target.parallel">In parallel</span>
         </label>
       </div>
+      <p id="drop-hint" class="drop-hint" data-i18n="attach.drop" hidden>Drop your files here to attach them</p>
+      <ul id="attachments" class="chips" hidden></ul>
+      <p id="attach-error" class="error" role="alert" hidden></p>
       <div class="row">
+        <button id="attach" class="btn" type="button" data-i18n-title="attach.button" data-i18n-aria-label="attach.button" title="Attach files" aria-label="Attach files">
+          <svg width="14" height="20" viewBox="0 0 7 10" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M2 0h3v1h-3zM1 1h1v6h-1zM5 1h1v8h-1zM3 3h1v6h-1zM4 9h1v1h-1z"/></svg>
+        </button>
+        <input id="attach-input" type="file" multiple hidden>
         <textarea id="input" rows="2" data-i18n-placeholder="input.placeholder" data-i18n-aria-label="input.label" placeholder="Explain what you want them to do together" aria-label="Message"></textarea>
         <button id="send" class="btn primary" type="submit" data-i18n-aria-label="input.send" aria-label="Send">↑</button>
       </div>

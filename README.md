@@ -40,6 +40,12 @@ Pendant ce temps, la page montre qui travaille, ce qu'il fait (fichier lu, comma
 
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
+### Joindre des fichiers
+
+Pour partir d'une capture d'écran, d'une maquette ou d'un document, déposez un ou plusieurs fichiers sur la conversation, choisissez-les avec le bouton trombone, ou collez une image. Ils partent avec votre message, qui peut ne contenir qu'eux : jusqu'à 10 fichiers par message, de 25 Mo chacun au plus. Les images s'affichent dans la conversation, les autres fichiers s'y téléchargent.
+
+Les fichiers joints sont gardés dans le dossier de données de Tandem, jamais dans votre projet. Les IA reçoivent leur chemin et peuvent les lire, quel que soit le réglage des droits du salon. Supprimer un salon supprime ses fichiers joints.
+
 ### Aux deux : l'une après l'autre, ou en parallèle
 
 Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'autre** : la seconde lit la réponse de la première, et elles ne modifient jamais les mêmes fichiers au même moment.
@@ -79,6 +85,7 @@ Tout reste sur votre machine, dans le dossier `data/` :
 
 - `data/rooms/` : les salons et leurs conversations ;
 - `data/media/` : une copie de chaque image créée ;
+- `data/attachments/` : les fichiers que vous joignez à vos messages ;
 - `data/workspaces/` : les dossiers des salons sans projet ;
 - `data/settings.json` : vos réglages.
 
