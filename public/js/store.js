@@ -1,21 +1,13 @@
 // L'état des salons : ceux qui existent, celui qui est affiché, et la dernière
 // action en cours de chaque agent. Rien ici ne touche à la page.
+import { readPref, writePref } from './prefs.js';
 
-const STORAGE_KEY = 'tandem.room';
+const CURRENT_ROOM = 'room';
 
-// Le stockage du navigateur peut être refusé (navigation privée, réglages) : on s'en passe alors.
-function remember(id) {
-  try {
-    localStorage.setItem(STORAGE_KEY, id || '');
-  } catch {}
-}
-
-function recall() {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+/** Le moment du dernier message d'un salon, ou de sa création s'il est encore vide. */
+function lastActivity(room) {
+  const last = room.messages[room.messages.length - 1];
+  return (last && last.ts) || room.createdAt;
 }
 
 export function createStore() {
@@ -28,10 +20,12 @@ export function createStore() {
   }
   let currentId = null;
 
-  const newestFirst = () => [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt);
+  const recentFirst = () => [...rooms.values()].sort((a, b) => lastActivity(b) - lastActivity(a));
 
+  /** Le salon à montrer faute de mieux : le plus récemment actif, archivé seulement s'il n'y a que cela. */
   const newestId = () => {
-    const first = newestFirst()[0];
+    const list = recentFirst();
+    const first = list.find((room) => !room.archived) || list[0];
     return first ? first.id : null;
   };
 
@@ -43,20 +37,21 @@ export function createStore() {
       return rooms.size === 0;
     },
     has: (id) => rooms.has(id),
+    get: (id) => rooms.get(id),
     current: () => rooms.get(currentId),
-    newestFirst,
+    recentFirst,
     newestId,
 
     /** Le salon à rouvrir : celui déjà affiché, sinon le dernier consulté, sinon le plus récent. */
     preferredId() {
-      const wanted = currentId || recall();
+      const wanted = currentId || readPref(CURRENT_ROOM);
       return rooms.has(wanted) ? wanted : newestId();
     },
 
     /** Affiche un salon, ou aucun s'il n'existe pas, et s'en souvient pour la prochaine visite. */
     select(id) {
       currentId = rooms.has(id) ? id : null;
-      remember(currentId);
+      writePref(CURRENT_ROOM, currentId || '');
     },
 
     replaceAll(list) {

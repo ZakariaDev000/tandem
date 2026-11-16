@@ -8,9 +8,9 @@ import { USER, isAgent } from '../participants.js';
 const isBusy = (room) => room.running.length > 0 || room.queue.length > 0;
 
 function folderLabel(room) {
-  if (room.ownFolder) return t('room.noFolder');
-  const tail = room.cwd.split('/').filter(Boolean).slice(-2).join('/');
-  return '…/' + tail + (room.access === 'read' ? ' · ' + t('room.readOnly') : '');
+  const notes = [room.access === 'read' && !room.ownFolder && t('room.readOnly'), room.archived && t('room.archived')].filter(Boolean);
+  const folder = room.ownFolder ? t('room.noFolder') : '…/' + room.cwd.split('/').filter(Boolean).slice(-2).join('/');
+  return [folder, ...notes].join(' · ');
 }
 
 /** L'état d'un salon en une phrase. `tone` choisit la couleur de l'étiquette. */

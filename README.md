@@ -2,7 +2,7 @@
 
 Un salon local où une session **Claude Code** et une session **Codex** (ChatGPT) travaillent ensemble : elles se posent des questions, se relisent, se passent des fichiers et des images, puis s'arrêtent quand elles n'ont plus rien à se demander.
 
-Tout se passe dans une page web servie depuis votre machine : un petit bureau animé en pixels à gauche, la conversation complète à droite.
+Tout se passe dans une page web servie depuis votre machine : la liste des salons à gauche, un petit bureau animé en pixels au centre, la conversation complète à droite.
 
 ## Ce qu'il faut
 
@@ -45,6 +45,17 @@ Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échang
 Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'autre** : la seconde lit la réponse de la première, et elles ne modifient jamais les mêmes fichiers au même moment.
 
 L'interrupteur **En parallèle** les fait répondre **en même temps**, sans se lire. C'est utile pour comparer deux avis indépendants. Évitez-le pour un travail sur les mêmes fichiers : rien n'empêche alors les deux IA de modifier le même fichier.
+
+### La liste des salons
+
+Les salons sont rangés dans le volet de gauche, le plus récemment actif en premier. Un point vert clignote à côté d'un salon où une IA travaille ; un carré orange signale un message arrivé pendant que vous regardiez ailleurs.
+
+- **Chercher** : tapez dans le champ en haut de la liste. `/` ou `Ctrl+K` (`⌘K` sur Mac) y mène depuis n'importe où, `Échap` l'efface.
+- **Renommer** : le bouton ✎ du salon, un double-clic sur son titre, ou `F2`. `Entrée` valide, `Échap` annule.
+- **Archiver** : le bouton ↓ range le salon dans le groupe « Archivés », en bas de la liste. Un salon archivé s'ouvre et se lit comme les autres ; le bouton ↑ le remet dans la liste.
+- **Replier le volet** : le bouton ☰ de la barre du haut laisse toute la largeur au bureau. Le navigateur s'en souvient.
+
+La suppression d'un salon reste dans l'en-tête de la conversation (bouton ✕).
 
 ## Mises à jour
 

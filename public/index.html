@@ -9,12 +9,11 @@
 </head>
 <body>
 <header class="top">
+  <button id="sidebar-toggle" class="btn ghost" aria-controls="sidebar" aria-expanded="true" title="Hide the room list" aria-label="Hide the room list">☰</button>
   <div class="brand">
     <span class="logo" aria-hidden="true"><i></i><i></i></span>
     <strong>Tandem</strong>
   </div>
-  <nav id="rooms" class="rooms" data-i18n-aria-label="rooms.label" aria-label="Rooms"></nav>
-  <button id="new-room" class="btn" data-i18n="room.new">+ New room</button>
   <button id="open-settings" class="btn ghost" data-i18n-title="settings.title" data-i18n-aria-label="settings.title" title="Settings" aria-label="Settings">⚙</button>
 </header>
 
@@ -22,6 +21,18 @@
   <span id="update-banner-text"></span>
   <button id="update-banner-action" class="btn small" hidden></button>
 </div>
+
+<div class="shell">
+<aside id="sidebar" class="sidebar">
+  <button id="new-room" class="btn" data-i18n="room.new">+ New room</button>
+  <input id="room-search" type="text" role="searchbox" data-i18n-placeholder="rooms.search" data-i18n-aria-label="rooms.search" data-i18n-title="rooms.searchHint" placeholder="Search rooms" aria-label="Search rooms" autocomplete="off" spellcheck="false">
+  <nav id="rooms" class="rooms" data-i18n-aria-label="rooms.label" aria-label="Rooms"></nav>
+  <p id="rooms-none" class="note" data-i18n="rooms.none" hidden>No room matches.</p>
+  <details id="archived-group" class="archived" hidden>
+    <summary id="archived-count"></summary>
+    <div id="rooms-archived" class="rooms"></div>
+  </details>
+</aside>
 
 <main id="app" class="app">
   <section class="stage" data-i18n-aria-label="office.label" aria-label="Office">
@@ -70,6 +81,7 @@
   <p data-i18n="empty.body">A room brings Claude and ChatGPT together around one topic. They talk, work, and stop when they have nothing left to ask each other.</p>
   <button id="empty-new" class="btn primary" data-i18n="empty.create">Create a room</button>
 </section>
+</div>
 
 <dialog id="dialog">
   <form id="room-form" method="dialog">

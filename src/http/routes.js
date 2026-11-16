@@ -1,7 +1,7 @@
 // Les routes de l'API : chacune traduit une demande de la page en un appel aux services.
 const { AppError } = require('../errors');
 const { pickFolder } = require('../folderPicker');
-const { toPublic } = require('../store');
+const { toPublic, toMeta } = require('../store');
 const { readJson, sendJson } = require('./respond');
 const { serveMedia } = require('./static');
 
@@ -68,6 +68,13 @@ function createRoutes({ store, hub, conductor, agents, settings, updater }) {
     ['POST', '/api/rooms/:roomId/stop', withRoom(({ res, room }) => {
       conductor.stop(room);
       ok(res);
+    })],
+
+    ['PATCH', '/api/rooms/:roomId', withRoom(async ({ req, res, room }) => {
+      store.edit(room, await readJson(req));
+      // Le même événement que pour un changement d'état : les autres pages ouvertes suivent.
+      hub.broadcast('room', toMeta(room));
+      sendJson(res, 200, toMeta(room));
     })],
 
     ['DELETE', '/api/rooms/:roomId', withRoom(({ res, room }) => {

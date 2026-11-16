@@ -4,21 +4,25 @@ import { apply as translatePage } from './i18n/index.js';
 import { subscribe } from './api.js';
 import { byId } from './dom.js';
 import { actionText } from './format.js';
-import { AGENT_IDS, SYSTEM } from './participants.js';
+import { AGENT_IDS, SYSTEM, USER } from './participants.js';
+import { createSidebar } from './sidebar.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
 import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
 import { initRoomDialog } from './chat/room-dialog.js';
-import { createRoomTabs } from './chat/tabs.js';
+import { createRoomList } from './chat/room-list.js';
 import { createThread } from './chat/thread.js';
+import { createUnread } from './unread.js';
 import { createUpdateUi } from './update.js';
 
 translatePage();
 
 const store = createStore();
 const office = createOffice(byId('scene'), byId('overlay'));
-const tabs = createRoomTabs({ store, onSelect: select });
+const sidebar = createSidebar();
+const unread = createUnread({ store, onSeen: renderRooms });
+const roomList = createRoomList({ store, unread, onSelect: select, reveal: () => sidebar.expand() });
 const header = createHeader({ store });
 const thread = createThread({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
@@ -33,11 +37,18 @@ function syncOffice() {
   }
 }
 
+/** La liste des salons, et ce qui la résume quand elle est repliée. */
+function renderRooms() {
+  roomList.render();
+  sidebar.flagUnread(unread.count > 0);
+}
+
 /** Affiche un salon, ou l'écran d'accueil s'il n'existe pas. */
 function select(id) {
   store.select(id);
+  unread.seeCurrent();
   office.reset();
-  tabs.render();
+  renderRooms();
   header.render();
   thread.render();
   syncOffice();
@@ -69,20 +80,20 @@ subscribe({
   roomCreated(room) {
     if (!store.has(room.id)) store.put(room);
     if (!store.currentId) select(room.id);
-    else tabs.render();
+    else renderRooms();
   },
 
   roomDeleted({ id }) {
     const wasCurrent = id === store.currentId;
     store.remove(id);
     if (wasCurrent) select(store.newestId());
-    else tabs.render();
+    else renderRooms();
   },
 
   room(meta) {
     const room = store.update(meta);
     if (!room) return;
-    tabs.render();
+    renderRooms();
     if (room.id !== store.currentId) return;
     header.render();
     thread.renderLive();
@@ -91,7 +102,11 @@ subscribe({
   },
 
   message({ roomId, message }) {
-    if (!store.addMessage(roomId, message) || roomId !== store.currentId) return;
+    if (!store.addMessage(roomId, message)) return;
+    if (message.from !== USER) unread.add(roomId);
+    // Un message remonte son salon en tête de liste.
+    renderRooms();
+    if (roomId !== store.currentId) return;
     thread.append(message);
     header.render();
     thread.scrollDown();

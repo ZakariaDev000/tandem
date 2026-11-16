@@ -16,6 +16,7 @@
   --user-bg: #dfe6f3;
   --user-ink: #1c2e52;
   --danger: #b3372b;
+  --accent: #e7a13a;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -41,28 +42,13 @@ body {
   border-bottom: 2px solid var(--ink);
   background: var(--card);
 }
-.brand { display: flex; align-items: center; gap: 8px; font: 600 16px var(--mono); letter-spacing: 0.02em; }
+.brand { flex: 1; display: flex; align-items: center; gap: 8px; font: 600 16px var(--mono); letter-spacing: 0.02em; }
 .logo { display: inline-flex; border: 2px solid var(--ink); }
 .logo i { width: 9px; height: 14px; display: block; background: var(--claude); }
 .logo i + i { background: var(--chatgpt); }
-.rooms { display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-.rooms button {
-  font: 13px var(--mono);
-  padding: 6px 10px;
-  border: 2px solid transparent;
-  background: none;
-  color: var(--ink-2);
-  cursor: pointer;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.rooms button:hover { color: var(--ink); background: var(--paper); }
-.rooms button[aria-current="true"] { border-color: var(--ink); color: var(--ink); background: var(--paper); }
-.rooms .dot { width: 8px; height: 8px; background: var(--line-2); }
-.rooms .dot.on { background: #3fae5a; animation: blink 1s steps(2) infinite; }
-@keyframes blink { 50% { opacity: 0.35; } }
+#sidebar-toggle { position: relative; font-size: 15px; padding: 4px 8px; }
+#sidebar-toggle:hover { color: var(--ink); }
+#sidebar-toggle.has-unread::after { content: ""; position: absolute; top: 2px; right: 0; width: 10px; height: 10px; background: var(--accent); border: 2px solid var(--ink); }
 
 .btn {
   font: 13px var(--mono);
@@ -88,12 +74,61 @@ body {
 .banner span { flex: 1; min-width: 0; }
 
 /* ---------- Mise en page ---------- */
+.shell { flex: 1; min-height: 0; display: flex; }
 .app {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
 }
+
+/* ---------- Liste des salons ---------- */
+.sidebar {
+  flex: none;
+  width: 240px;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 10px;
+  border-right: 2px solid var(--ink);
+  background: var(--card);
+}
+.sidebar .note { margin: 0; font: 12px var(--mono); }
+#room-search { font: 12px var(--mono); padding: 6px 8px; }
+.rooms { display: flex; flex-direction: column; gap: 2px; }
+.room-row { display: flex; align-items: center; border: 2px solid transparent; }
+.room-row:hover, .room-row:focus-within { background: var(--paper); }
+.room-row.current { border-color: var(--ink); background: var(--paper); }
+.room {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: 13px var(--mono);
+  text-align: left;
+  cursor: pointer;
+}
+.room:hover, .room-row.current .room, .room-row.unread .room { color: var(--ink); }
+.room-row.unread .room { font-weight: 600; }
+.room-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rooms .dot { flex: none; width: 8px; height: 8px; background: var(--line-2); }
+.rooms .dot.on { background: #3fae5a; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+.unread-mark { flex: none; width: 10px; height: 10px; background: var(--accent); border: 2px solid var(--ink); }
+.room-tool { flex: none; padding: 4px 6px; border: 0; background: none; color: var(--ink-3); font: 13px var(--mono); cursor: pointer; opacity: 0; }
+.room-row:hover .room-tool, .room-row:focus-within .room-tool { opacity: 1; }
+.room-tool:hover { color: var(--ink); }
+.rooms .room-rename { font: 13px var(--mono); padding: 4px 6px; }
+.archived summary { font: 12px var(--mono); color: var(--ink-2); cursor: pointer; padding: 4px 8px; }
+.archived .rooms { margin-top: 2px; }
 .stage {
   min-width: 0;
   padding: 20px;
