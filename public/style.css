@@ -283,6 +283,39 @@ textarea, input[type="text"] {
 textarea { resize: none; max-height: 160px; }
 #send { font-size: 16px; padding: 8px 14px; }
 
+/* ---------- Fichiers joints ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.body .chips { margin: 8px 0 4px; }
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 28px;
+  padding-left: 6px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+  font: 11px var(--mono);
+  color: var(--ink);
+  text-decoration: none;
+}
+a.chip { padding-right: 6px; }
+a.chip:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.chip img { align-self: stretch; width: 28px; margin-left: -6px; object-fit: cover; border-right: 2px solid var(--ink); background: var(--card); }
+.chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-size { flex: none; color: var(--ink-2); }
+.chip .btn { padding: 2px 6px; }
+.chip-bar { position: absolute; left: 0; bottom: 0; height: 4px; background: #e7a13a; }
+.drop-hint { margin: 0; padding: 8px; border: 2px dashed var(--ink); background: #fbe9c7; font: 12px var(--mono); text-align: center; }
+.thread.dropping { outline: 3px dashed var(--ink); outline-offset: -8px; background: var(--paper); }
+.composer .error { margin: 0; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+#attach { padding: 8px 10px; }
+#attach svg { display: block; }
+
 /* ---------- Écran vide et fenêtre de création ---------- */
 .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 6px; }
 .empty h1 { font: 600 22px var(--mono); margin: 0; }

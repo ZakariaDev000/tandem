@@ -1,4 +1,5 @@
 // Le protocole de conversation : ce qu'on dit aux IA, et comment on lit à qui elles répondent.
+const path = require('node:path');
 const { agents } = require('./agents');
 const { USER, AGENT_IDS, displayName, otherAgent } = require('./participants');
 
@@ -37,10 +38,25 @@ function recipientLabel(to, reader) {
 }
 
 /**
- * Le message d'un tour : tout ce qui s'est dit dans le salon depuis le dernier tour de cette IA.
- * Renvoie null s'il n'y a rien de nouveau pour elle. `alongside` nomme les IA qui répondent en même temps.
+ * Les fichiers joints à un message, avec le chemin complet où l'IA peut les ouvrir :
+ * ils sont gardés hors du dossier de travail, dans `dir`.
  */
-function buildPrompt(room, agentId, { includeRules, alongside = [] }) {
+function attachmentLines(message, dir, reader) {
+  if (!message.attachments?.length) return [];
+  // On ne promet de voir une image qu'à l'IA dont l'outil l'a montré à l'essai.
+  const images = agents.get(reader).viewsImageFiles ? ' An image can be viewed the same way.' : '';
+  return [
+    `Files attached to this message. They are kept outside the working folder: open them at these exact paths with your file tools, and do not change them.${images}`,
+    ...message.attachments.map((attachment) => `- ${attachment.name} (${attachment.kind}, ${attachment.size} bytes): ${path.join(dir, attachment.file)}`),
+  ];
+}
+
+/**
+ * Le message d'un tour : tout ce qui s'est dit dans le salon depuis le dernier tour de cette IA.
+ * Renvoie null s'il n'y a rien de nouveau pour elle. `alongside` nomme les IA qui répondent en même temps,
+ * `attachmentsDir` le dossier où sont gardés les fichiers joints du salon.
+ */
+function buildPrompt(room, agentId, { includeRules, alongside = [], attachmentsDir }) {
   const fresh = room.messages
     .slice(room.seen[agentId] || 0)
     .filter((message) => message.from !== agentId && message.from !== 'system');
@@ -49,7 +65,7 @@ function buildPrompt(room, agentId, { includeRules, alongside = [] }) {
   if (includeRules) parts.push(rules(room, agentId), '');
   parts.push('New messages in the room:', '');
   for (const message of fresh) {
-    parts.push(`### ${displayName(message.from)} (${recipientLabel(message.to, agentId)})`, message.text, '');
+    parts.push(`### ${displayName(message.from)} (${recipientLabel(message.to, agentId)})`, message.text, ...attachmentLines(message, attachmentsDir, agentId), '');
   }
   // En parallèle, chaque IA répond sans lire l'autre : autant qu'elle le sache.
   if (alongside.length) {

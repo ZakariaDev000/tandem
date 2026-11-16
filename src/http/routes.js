@@ -2,6 +2,7 @@
 const { AppError } = require('../errors');
 const { pickFolder } = require('../folderPicker');
 const { toPublic } = require('../store');
+const { createAttachmentRoutes } = require('./attachmentRoutes');
 const { readJson, sendJson } = require('./respond');
 const { serveMedia } = require('./static');
 
@@ -9,7 +10,7 @@ const { serveMedia } = require('./static');
  * Renvoie la table des routes. Dans un chemin, « :nom » capture un segment.
  * Un gestionnaire reçoit { req, res, params } et, pour les routes d'un salon, `room`.
  */
-function createRoutes({ store, hub, conductor, agents, settings, updater }) {
+function createRoutes({ store, hub, conductor, agents, settings, updater, attachments }) {
   /** Enveloppe une route de salon : résout le salon, ou répond qu'il n'existe plus. */
   const withRoom = (handler) => (context) => {
     const room = store.get(context.params.roomId);
@@ -53,12 +54,16 @@ function createRoutes({ store, hub, conductor, agents, settings, updater }) {
     }],
 
     ['POST', '/api/rooms/:roomId/messages', withRoom(async ({ req, res, room }) => {
-      const { to, text, parallel } = await readJson(req);
+      const { to, text, parallel, attachments: attachmentIds } = await readJson(req);
       const trimmed = String(text || '').trim();
-      if (!trimmed) throw new AppError(400, 'empty_message', 'The message is empty.');
-      conductor.post(room, { to, text: trimmed, parallel });
+      const attached = attachments.claim(room.id, attachmentIds);
+      // Des fichiers joints suffisent à faire un message.
+      if (!trimmed && !attached.length) throw new AppError(400, 'empty_message', 'The message is empty.');
+      conductor.post(room, { to, text: trimmed, parallel, attachments: attached });
       ok(res);
     })],
+
+    ...createAttachmentRoutes({ attachments, withRoom }),
 
     ['POST', '/api/rooms/:roomId/pause', withRoom(async ({ req, res, room }) => {
       const { paused } = await readJson(req);
@@ -74,6 +79,7 @@ function createRoutes({ store, hub, conductor, agents, settings, updater }) {
     ['DELETE', '/api/rooms/:roomId', withRoom(({ res, room }) => {
       conductor.abandon(room);
       store.delete(room);
+      attachments.deleteRoom(room.id);
       hub.broadcast('room-deleted', { id: room.id });
       ok(res);
     })],

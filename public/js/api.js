@@ -10,18 +10,20 @@ async function request(method, url, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    // Le serveur renvoie un code d'erreur ; la page le dit dans la langue de la personne.
-    const key = 'error.' + data.error;
-    const known = t(key);
-    throw new Error(known !== key ? known : data.message || t('error.generic'));
-  }
+  if (!res.ok) throw failure(data);
   return data;
+}
+
+/** Le serveur renvoie un code d'erreur ; la page le dit dans la langue de la personne. */
+function failure(data) {
+  const key = 'error.' + data.error;
+  const known = t(key);
+  return new Error(known !== key ? known : data.message || t('error.generic'));
 }
 
 export const createRoom = ({ title, cwd, access }) => request('POST', '/api/rooms', { title, cwd, access });
 export const deleteRoom = (roomId) => request('DELETE', `/api/rooms/${roomId}`);
-export const sendMessage = (roomId, { to, text, parallel }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel });
+export const sendMessage = (roomId, { to, text, parallel, attachments }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel, attachments });
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });
 export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`);
 
@@ -33,6 +35,34 @@ export const applyUpdate = () => request('POST', '/api/update/apply');
 export async function pickFolder(prompt) {
   const { path } = await request('POST', '/api/pick-folder', { prompt });
   return path;
+}
+
+/** Les limites que le serveur impose aux fichiers joints : { maxFileBytes, maxPerMessage }. */
+export const attachmentLimits = () => request('GET', '/api/attachments/limits');
+export const discardAttachment = (roomId, id) => request('DELETE', `/api/rooms/${roomId}/attachments/${id}`);
+
+/**
+ * Envoie un fichier à joindre au prochain message du salon. Renvoie `done`, tenue avec ce que
+ * le serveur en a gardé (dont `id`, à donner à sendMessage), et `abort()` pour y renoncer.
+ * `onProgress` reçoit la part déjà envoyée, de 0 à 1.
+ */
+export function uploadAttachment(roomId, file, onProgress) {
+  // fetch ne dit pas où en est un envoi : XMLHttpRequest, si.
+  const xhr = new XMLHttpRequest();
+  const done = new Promise((resolve, reject) => {
+    // Seul le code d'erreur est repris : le texte du serveur ne s'affiche jamais tel quel.
+    const fail = () => reject(failure({ error: xhr.response?.error }));
+    xhr.upload.addEventListener('progress', (event) => event.lengthComputable && onProgress(event.loaded / event.total));
+    xhr.addEventListener('load', () => (xhr.status === 200 ? resolve(xhr.response) : fail()));
+    xhr.addEventListener('error', fail);
+    xhr.addEventListener('abort', fail);
+  });
+  // Le corps de la requête est le fichier lui-même ; son nom voyage dans l'adresse.
+  xhr.open('POST', `/api/rooms/${roomId}/attachments?name=${encodeURIComponent(file.name)}`);
+  xhr.setRequestHeader('X-Tandem', '1');
+  xhr.responseType = 'json';
+  xhr.send(file);
+  return { done, abort: () => xhr.abort() };
 }
 
 const EVENT_NAMES = {

@@ -29,21 +29,43 @@ function servePublicFile(res, publicDir, urlPath) {
   fs.createReadStream(file).pipe(res);
 }
 
+// En-têtes de tout fichier gardé pour un salon : aucun ne doit pouvoir agir sur la page.
+const STORED_FILE_HEADERS = {
+  // Chaque copie a un nom unique et ne change jamais : le navigateur peut la garder.
+  'Cache-Control': 'private, max-age=31536000, immutable',
+  'X-Content-Type-Options': 'nosniff',
+  // « sandbox » empêche un fichier ouvert seul d'exécuter du code sur cette page.
+  'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+};
+
+const imageTypeOf = (file) => {
+  const type = MIME_TYPES[path.extname(file)];
+  return type && type.startsWith('image/') ? type : null;
+};
+
 /** Sert une image gardée par un salon. */
 function serveMedia(res, mediaDir, fileName) {
   // basename : le nom reçu ne peut désigner qu'un fichier de ce dossier.
   const file = path.join(mediaDir, path.basename(fileName));
-  const type = MIME_TYPES[path.extname(file)];
-  if (!type || !type.startsWith('image/') || !isFile(file)) throw new AppError(404, 'image_not_found', 'Image not found.');
+  const type = imageTypeOf(file);
+  if (!type || !isFile(file)) throw new AppError(404, 'image_not_found', 'Image not found.');
+  res.writeHead(200, { ...STORED_FILE_HEADERS, 'Content-Type': type });
+  fs.createReadStream(file).pipe(res);
+}
+
+/**
+ * Sert un fichier joint par la personne. `inline` est décidé par le serveur, jamais par la page :
+ * seule une image reconnue s'affiche, tout autre fichier est proposé en téléchargement.
+ */
+function serveAttachment(res, file, inline) {
+  if (!isFile(file)) throw new AppError(404, 'attachment_not_found', 'Attachment not found.');
+  const type = inline ? imageTypeOf(file) : null;
   res.writeHead(200, {
-    'Content-Type': type,
-    // Chaque copie a un nom unique et ne change jamais : le navigateur peut la garder.
-    'Cache-Control': 'private, max-age=31536000, immutable',
-    'X-Content-Type-Options': 'nosniff',
-    // « sandbox » empêche un fichier SVG ouvert seul d'exécuter du code sur cette page.
-    'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+    ...STORED_FILE_HEADERS,
+    'Content-Type': type || 'application/octet-stream',
+    ...(!type && { 'Content-Disposition': 'attachment' }),
   });
   fs.createReadStream(file).pipe(res);
 }
 
-module.exports = { servePublicFile, serveMedia };
+module.exports = { servePublicFile, serveMedia, serveAttachment };
