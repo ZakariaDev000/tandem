@@ -1,6 +1,7 @@
 // Adaptateur pour Claude Code, lancé en mode non interactif (`claude -p`).
 const crypto = require('node:crypto');
 const { shorten, baseName } = require('../util');
+const { createPermissionPrompt } = require('./claude-permissions');
 
 // Outils retirés à Claude quand le salon est en lecture seule.
 const WRITE_TOOLS = ['Edit', 'Write', 'NotebookEdit', 'Bash'];
@@ -27,6 +28,8 @@ function describeTool(name, input = {}) {
   }
 }
 
+const permissionPrompt = createPermissionPrompt(describeTool);
+
 module.exports = {
   id: 'claude',
   name: 'Claude',
@@ -35,11 +38,14 @@ module.exports = {
   // Claude reçoit les consignes du salon comme consignes système, à chaque tour.
   rulesInFirstPrompt: false,
   generatesImages: false,
+  // Capacité facultative : ce que Claude Code ne peut pas faire seul, il le demande à la personne.
+  permissionPrompt,
 
-  buildArgs({ session, access, rules }) {
+  buildArgs({ session, access, rules, permissionUrl }) {
     const args = ['-p', '--output-format', 'stream-json', '--verbose', '--append-system-prompt', rules];
+    // En lecture seule, rien n'est demandé : écritures et commandes restent refusées d'office.
     if (access === 'read') args.push('--disallowedTools', ...WRITE_TOOLS);
-    else args.push('--permission-mode', 'acceptEdits');
+    else args.push('--permission-mode', 'acceptEdits', ...(permissionUrl ? permissionPrompt.args(permissionUrl) : []));
     if (session) return { args: [...args, '--resume', session], session };
     // On choisit nous-mêmes l'identifiant d'une nouvelle session, pour pouvoir la reprendre ensuite.
     const fresh = crypto.randomUUID();

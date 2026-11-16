@@ -8,6 +8,7 @@ const { scanImages, collectNewImages } = require('./images');
 const { USER, AGENT_IDS, isAgent } = require('./participants');
 const { rules, buildPrompt, parseReply } = require('./protocol');
 const { toMeta } = require('./store');
+const { shorten } = require('./util');
 
 /** Inscrit une étape dans la file d'un salon. Une IA déjà en attente ailleurs n'y figure qu'une fois. */
 function enqueue(room, agentIds, first = false) {
@@ -20,12 +21,14 @@ class Conductor {
   #store;
   #hub;
   #agents;
+  #approvals;
   #turns = new Map(); // salon -> tours en cours, par IA
 
-  constructor({ store, hub, agents }) {
+  constructor({ store, hub, agents, approvals }) {
     this.#store = store;
     this.#hub = hub;
     this.#agents = agents;
+    this.#approvals = approvals;
   }
 
   /**
@@ -50,6 +53,12 @@ class Conductor {
     this.#pump(room);
   }
 
+  /** La personne répond à une demande d'autorisation ; sa réponse laisse une trace dans la conversation. */
+  answer(room, requestId, decision) {
+    const request = this.#approvals.answer(room, requestId, decision);
+    this.#addMessage(room, { from: 'system', kind: 'info', code: 'approval', decision, agent: request.agent, detail: shorten(request.summary, 160) });
+  }
+
   /** Arrête les IA en cours et vide la file. */
   stop(room) {
     room.queue = [];
@@ -60,12 +69,15 @@ class Conductor {
       room.stopping = true;
       for (const turn of turns.values()) turn.stop();
     }
+    // Une IA qu'on arrête n'attend plus de réponse à ses demandes.
+    this.#approvals.close(room);
     this.#announce(room);
   }
 
   /** Interrompt un salon qu'on supprime, sans rien y écrire. */
   abandon(room) {
     for (const turn of this.#turnsOf(room).values()) turn.stop();
+    this.#approvals.close(room);
   }
 
   /** Vrai tant qu'une IA répond ou attend son tour, dans n'importe quel salon. */
@@ -161,7 +173,9 @@ class Conductor {
   /** Lance le tour d'une IA et renvoie son message, avec ses actions et les images créées. */
   async #runTurn(room, { agent, session, prompt }, readUpTo, shared) {
     const actions = [];
-    const turn = startTurn(agent, { cwd: room.cwd, access: room.access, session, rules: rules(room, agent.id), prompt }, (action) => {
+    // Une IA qui sait demander la permission reçoit un guichet, ouvert le temps de ce tour.
+    const gate = agent.permissionPrompt ? this.#approvals.open(room, agent) : null;
+    const turn = startTurn(agent, { cwd: room.cwd, access: room.access, session, rules: rules(room, agent.id), prompt, permissionUrl: gate?.url }, (action) => {
       // Une IA répète souvent la même action plusieurs fois de suite : on ne la note qu'une fois.
       const last = actions[actions.length - 1];
       if (!last || last.verb !== action.verb || last.target !== action.target) actions.push(action);
@@ -169,7 +183,7 @@ class Conductor {
     });
     this.#turnsOf(room).set(agent.id, turn);
 
-    const result = await turn.done;
+    const result = await turn.done.finally(() => gate?.close());
     room.sessions[agent.id] = result.session;
     room.seen[agent.id] = readUpTo;
     const reply = parseReply(agent.id, result.text);

@@ -7,7 +7,7 @@ const { AGENT_IDS } = require('./participants');
 const { shorten, expandHome } = require('./util');
 
 // Ce qui décrit le tour en cours ne s'enregistre pas : au redémarrage, plus rien ne tourne.
-const RUNTIME_FIELDS = ['running', 'queue', 'paused', 'stopping'];
+const RUNTIME_FIELDS = ['running', 'queue', 'paused', 'stopping', 'approvals'];
 
 const blankPerAgent = (value) => Object.fromEntries(AGENT_IDS.map((id) => [id, value]));
 
@@ -16,6 +16,7 @@ function resetRuntime(room) {
   room.queue = [];
   room.paused = false;
   room.stopping = false;
+  room.approvals = []; // les demandes d'autorisation qui attendent la personne
 }
 
 /** Ce que la page reçoit d'un salon. */
@@ -49,6 +50,8 @@ class RoomStore {
       try {
         const room = JSON.parse(fs.readFileSync(path.join(this.#roomsDir, file), 'utf8'));
         resetRuntime(room);
+        // Un salon enregistré avant les demandes d'autorisation n'a encore rien d'autorisé pour toujours.
+        room.allowed ||= [];
         this.#rooms.set(room.id, room);
         if (this.#migrate(room)) this.save(room);
       } catch (error) {
@@ -89,6 +92,7 @@ class RoomStore {
       ownFolder,
       access: access === 'read' ? 'read' : 'write',
       createdAt: Date.now(),
+      allowed: [], // ce que la personne a autorisé pour toujours dans ce salon
       messages: [],
       sessions: blankPerAgent(null),
       seen: blankPerAgent(0),

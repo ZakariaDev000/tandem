@@ -24,12 +24,13 @@ function readJsonLines(stream, onEvent) {
 /**
  * Démarre un tour. Renvoie `done`, tenue avec { text, session } à la fin du tour,
  * et `stop()` pour l'interrompre (`done` est alors rejetée avec StoppedError).
+ * `permissionUrl` est l'adresse où une IA qui sait le faire demande la permission d'agir.
  */
-function startTurn(agent, { cwd, access, session, rules, prompt }, onActivity) {
+function startTurn(agent, { cwd, access, session, rules, prompt, permissionUrl }, onActivity) {
   if (!agent.binary) {
     return { done: Promise.reject(new Error(`${agent.product} was not found on this machine.`)), stop() {} };
   }
-  const built = agent.buildArgs({ session, access, rules, cwd });
+  const built = agent.buildArgs({ session, access, rules, cwd, permissionUrl });
   const turn = { session: built.session, finalText: null, lastText: null, failure: null };
   const child = spawn(agent.binary, built.args, { cwd, env: process.env, stdio: ['pipe', 'pipe', 'pipe'] });
   let stopped = false;
