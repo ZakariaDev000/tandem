@@ -20,12 +20,14 @@ class Conductor {
   #store;
   #hub;
   #agents;
+  #changes;
   #turns = new Map(); // salon -> tours en cours, par IA
 
-  constructor({ store, hub, agents }) {
+  constructor({ store, hub, agents, changes }) {
     this.#store = store;
     this.#hub = hub;
     this.#agents = agents;
+    this.#changes = changes;
   }
 
   /**
@@ -119,13 +121,14 @@ class Conductor {
     room.running = jobs.map((job) => job.agent.id);
     this.#announce(room);
     // Les IA d'une même étape partagent ce relevé : une image n'est attribuée qu'à la première qui finit.
-    const shared = { images: scanImages(room.cwd), startedAt: Date.now() };
+    const shared = { images: scanImages(room.cwd), startedAt: Date.now(), changes: this.#changes.startStep(room) };
     const outcomes = await Promise.all(jobs.map((job) => this.#runJob(room, job, readUpTo, shared)));
     this.#turns.delete(room.id);
     if (!this.#store.has(room.id)) return;
 
     // Une IA en échec ou arrêtée interrompt la suite : mieux vaut rendre la main à la personne.
-    if (outcomes.includes(null)) room.queue = [];
+    // Pareil si l'arrêt a été demandé alors qu'elle venait de finir.
+    if (outcomes.includes(null) || room.stopping) room.queue = [];
     // Un message adressé à une autre IA lui donne la main tout de suite.
     else for (const to of outcomes) if (isAgent(to)) enqueue(room, [to], true);
 
@@ -158,8 +161,14 @@ class Conductor {
     return recipient;
   }
 
-  /** Lance le tour d'une IA et renvoie son message, avec ses actions et les images créées. */
+  /** Lance le tour d'une IA et renvoie son message, avec ses actions, les images créées et les fichiers changés. */
   async #runTurn(room, { agent, session, prompt }, readUpTo, shared) {
+    // L'IA ne commence qu'une fois le dossier relevé. D'ici là, l'arrêter doit déjà être possible.
+    let stopped = false;
+    this.#turnsOf(room).set(agent.id, { stop: () => (stopped = true) });
+    await shared.changes.ready;
+    if (stopped) throw new StoppedError();
+
     const actions = [];
     const turn = startTurn(agent, { cwd: room.cwd, access: room.access, session, rules: rules(room, agent.id), prompt }, (action) => {
       // Une IA répète souvent la même action plusieurs fois de suite : on ne la note qu'une fois.
@@ -184,7 +193,8 @@ class Conductor {
       filePrefix: id.slice(0, 8),
     });
     shared.images = scanImages(room.cwd);
-    return { id, from: agent.id, to: reply.to, text: reply.text, actions, images };
+    const changes = await shared.changes.collect();
+    return { id, from: agent.id, to: reply.to, text: reply.text, actions, images, ...(changes && { changes }) };
   }
 }
 

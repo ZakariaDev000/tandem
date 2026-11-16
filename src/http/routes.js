@@ -9,7 +9,7 @@ const { serveMedia } = require('./static');
  * Renvoie la table des routes. Dans un chemin, « :nom » capture un segment.
  * Un gestionnaire reçoit { req, res, params } et, pour les routes d'un salon, `room`.
  */
-function createRoutes({ store, hub, conductor, agents, settings, updater }) {
+function createRoutes({ store, hub, conductor, agents, settings, updater, changes }) {
   /** Enveloppe une route de salon : résout le salon, ou répond qu'il n'existe plus. */
   const withRoom = (handler) => (context) => {
     const room = store.get(context.params.roomId);
@@ -70,9 +70,15 @@ function createRoutes({ store, hub, conductor, agents, settings, updater }) {
       ok(res);
     })],
 
+    // Le détail d'un fichier changé par un message, désigné par sa place dans la liste du message.
+    ['GET', '/api/rooms/:roomId/messages/:messageId/changes/:index', withRoom(async ({ res, params, room }) => {
+      sendJson(res, 200, await changes.fileOf(room, params.messageId, params.index));
+    })],
+
     ['DELETE', '/api/rooms/:roomId', withRoom(({ res, room }) => {
       conductor.abandon(room);
       store.delete(room);
+      changes.forget(room);
       hub.broadcast('room-deleted', { id: room.id });
       ok(res);
     })],

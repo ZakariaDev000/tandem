@@ -5,6 +5,6 @@
   "license": "MIT",
   "description": "A local room where a Claude Code session and a Codex (ChatGPT) session talk to each other.",
   "bin": { "tandem": "server.js" },
-  "scripts": { "start": "node server.js" },
+  "scripts": { "start": "node server.js", "test": "node --test test/" },
   "engines": { "node": ">=20" }
 }
