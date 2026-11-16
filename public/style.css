@@ -129,7 +129,7 @@ body {
 }
 .tag.claude { background: var(--claude); }
 .tag.chatgpt { background: var(--chatgpt); }
-.tag.user { background: var(--user); cursor: default; }
+.tag.user { background: var(--user); }
 .tag.target { box-shadow: 0 0 0 3px #e7a13a; }
 
 .bubble {
@@ -308,6 +308,27 @@ legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
 .radio { font-weight: 400 !important; margin-bottom: 4px !important; display: flex !important; gap: 8px; align-items: center; }
 .error { color: var(--danger); font-size: 13px; margin: 0 0 10px; }
 .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+/* ---------- Fenêtre « Personnages » ---------- */
+.looks-open { margin-top: -6px; }
+.looks-open:hover { color: var(--ink); }
+.looks-who { display: flex; margin-bottom: 14px; }
+.looks-who button { font: 12px var(--mono); padding: 4px 10px; border: 2px solid var(--ink); margin-right: -2px; background: var(--card); color: var(--ink-2); cursor: pointer; }
+.looks-who button[aria-checked="true"] { background: var(--ink); color: var(--card); }
+.looks-who button.claude[aria-checked="true"] { background: var(--claude); }
+.looks-who button.chatgpt[aria-checked="true"] { background: var(--chatgpt); }
+.looks-who button.user[aria-checked="true"] { background: var(--user); }
+.looks-body { display: flex; gap: 16px; align-items: flex-start; }
+.looks-preview { flex: none; width: 100px; height: 120px; border: 2px solid var(--ink); image-rendering: pixelated; }
+.looks-fields { flex: 1; min-width: 0; }
+.looks-fields select { display: block; margin-top: 4px; font: 13px var(--sans); padding: 4px 6px; border: 2px solid var(--ink); background: #fff; color: var(--ink); border-radius: 0; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatches legend { width: 100%; }
+.swatches label { position: relative; display: block; margin: 0; cursor: pointer; }
+.swatches input { position: absolute; opacity: 0; width: 0; height: 0; }
+.swatches span { display: block; width: 22px; height: 22px; border: 2px solid var(--ink); }
+.swatches input:checked + span { box-shadow: 0 0 0 3px #e7a13a; }
+.swatches input:focus-visible + span { outline: 3px solid #e7a13a; outline-offset: 2px; }
 
 @media (max-width: 980px) {
   body { height: auto; min-height: 100%; }

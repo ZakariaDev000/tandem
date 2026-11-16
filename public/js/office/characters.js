@@ -1,14 +1,13 @@
 // Le dessin d'un personnage selon son état : assis, en train de taper, debout ou en marche,
 // et ses petites pauses (il s'étire, regarde par la fenêtre, rapporte un café).
+// Son apparence arrive en `costume` (voir looks.js) : palette, tête de face et de dos.
 import { isSeated, isWalking } from './actors.js';
-import { ARMS_UP, backOf, BODY, BODY_ARMS_UP, BODY_TYPING, HEADS, LEGS, PALETTES, SPRITE_WIDTH, WALK_CYCLE } from './sprites.js';
+import { ARMS_UP, BODY, BODY_ARMS_UP, BODY_TYPING, LEGS, SPRITE_WIDTH, WALK_CYCLE } from './sprites.js';
 
-const BACKS = Object.fromEntries(Object.entries(HEADS).map(([id, head]) => [id, backOf(head)]));
 const CUP = '#f6efe2';
 
-function drawSeated(p, actor, x, now) {
-  const palette = PALETTES[actor.id];
-  const head = HEADS[actor.id];
+function drawSeated(p, actor, costume, x, now) {
+  const { palette, head } = costume;
   // Le bureau ou la table cache les jambes : on ne dessine que le buste.
   const y = Math.round(actor.pos.y) - 15;
   if (actor.pose === 'stretch') {
@@ -27,14 +26,17 @@ function legsOf(actor, now) {
   return 0;
 }
 
-export function drawCharacter(p, actor, now) {
-  const x = Math.round(actor.pos.x) - SPRITE_WIDTH / 2;
-  if (isSeated(actor)) return drawSeated(p, actor, x, now);
-  const y = Math.round(actor.pos.y) - 16;
-  // Ombre
+/** Un personnage debout, son ombre à ses pieds, le coin haut gauche en (`x`, `y`). Sert aussi à l'aperçu. */
+export function drawFigure(p, costume, x, y, { legs = 0, fromBehind = false } = {}) {
   p.faded(0.18, () => p.rect(x + 2, y + 15, 8, 2, '#000000'));
-  const head = actor.pose === 'back' ? BACKS[actor.id] : HEADS[actor.id];
-  p.sprite(head.concat(BODY, LEGS[legsOf(actor, now)]), PALETTES[actor.id], x, y);
+  p.sprite((fromBehind ? costume.back : costume.head).concat(BODY, LEGS[legs]), costume.palette, x, y);
+}
+
+export function drawCharacter(p, actor, costume, now) {
+  const x = Math.round(actor.pos.x) - SPRITE_WIDTH / 2;
+  if (isSeated(actor)) return drawSeated(p, actor, costume, x, now);
+  const y = Math.round(actor.pos.y) - 16;
+  drawFigure(p, costume, x, y, { legs: legsOf(actor, now), fromBehind: actor.pose === 'back' });
   if (actor.holding === 'cup') {
     // La tasse dans la main, et sa vapeur qui danse.
     p.rect(x + 10, y + 8, 2, 2, CUP);

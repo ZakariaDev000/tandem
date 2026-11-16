@@ -16,14 +16,14 @@ export function bubbleText(text) {
 
 const percent = (value, total) => ((value / total) * 100).toFixed(2) + '%';
 
-/** Crée l'étiquette et la bulle de chaque personnage. `onPick` reçoit l'agent dont on clique l'étiquette. */
+/** Crée l'étiquette et la bulle de chaque personnage. `onPick` reçoit celui dont on clique l'étiquette. */
 export function createBubbles(overlay, ids, { onPick }) {
   const elements = {};
   for (const id of ids) {
     const tag = document.createElement('div');
     tag.className = 'tag ' + id;
     tag.textContent = displayName(id);
-    if (isAgent(id)) tag.addEventListener('click', () => onPick(id));
+    tag.addEventListener('click', () => onPick(id));
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
     overlay.append(bubble, tag);

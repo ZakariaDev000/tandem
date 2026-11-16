@@ -13,6 +13,7 @@ import { initRoomDialog } from './chat/room-dialog.js';
 import { createRoomTabs } from './chat/tabs.js';
 import { createThread } from './chat/thread.js';
 import { createUpdateUi } from './update.js';
+import { createLooksDialog } from './looks-dialog.js';
 
 translatePage();
 
@@ -23,6 +24,7 @@ const header = createHeader({ store });
 const thread = createThread({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
+const looks = createLooksDialog({ onChange: (all) => office.setLooks(all) });
 
 /** Dans le bureau, travaillent les agents qui répondent dans le salon affiché : un seul, ou les deux en parallèle. */
 function syncOffice() {
@@ -57,6 +59,9 @@ office.onPick((id) => {
   composer.toggleTarget(id);
   composer.focus();
 });
+
+// Cliquer son propre personnage ouvre la fenêtre pour changer d'apparence.
+office.onPickUser((id) => looks.open(id));
 
 subscribe({
   // Envoyé à chaque connexion, donc aussi après une coupure : on repart de la liste complète.

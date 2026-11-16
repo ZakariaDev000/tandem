@@ -5,6 +5,9 @@ import { PALETTES } from './sprites.js';
 const { width: W, height: H } = SCENE;
 
 const WOOD = '#6b4a2e';
+// Le mur et le parquet : l'aperçu des personnages les reprend, pour juger d'une couleur sur le vrai décor.
+export const WALL = '#efe2c8';
+export const FLOOR = '#c9a06b';
 const NIGHT = '#27304f';
 const BOOKS = ['#d9643a', '#2f4a7a', '#e7a13a', '#1f8f7d', '#7d5a8c', '#b3372b', '#55606e'];
 const STARS = [[110, 13], [121, 22], [131, 11], [116, 30], [145, 27]];
@@ -17,12 +20,12 @@ function skyColor(hour) {
 
 function drawRoom(p) {
   // Mur
-  p.rect(0, 0, W, 54, '#efe2c8');
+  p.rect(0, 0, W, 54, WALL);
   p.rect(0, 42, W, 10, '#e4d3b2');
   p.rect(0, 41, W, 1, '#d2bf9b');
   p.rect(0, 52, W, 2, '#8a6a4a');
   // Parquet
-  p.rect(0, 54, W, H - 54, '#c9a06b');
+  p.rect(0, 54, W, H - 54, FLOOR);
   for (let y = 54, n = 0; y < H; y += 9, n++) {
     p.rect(0, y, W, 1, '#b58c58');
     for (let x = (n % 2) * 20 - 6; x < W; x += 40) p.rect(x, y + 1, 1, 8, '#b58c58');

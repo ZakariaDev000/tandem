@@ -9,10 +9,15 @@ export const PALETTES = {
   user: { h: '#2b2420', s: '#c98f63', e: '#2b2420', c: '#2f4a7a', d: '#233a61', p: '#55606e', b: '#2b2420' },
 };
 
-export const HEADS = {
-  claude: ['....hhhh....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
-  chatgpt: ['...hhhhhh...', '..hhhhhhhh..', '..dssssssd..', '..dsessesd..', '...ssssss...', '....ssss....'],
-  user: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
+// Les coiffures, au choix de chacun (voir looks.js). Les trois premières sont celles d'origine
+// de Claude, de ChatGPT (avec son casque, aux couleurs de sa tenue) et de la personne (sa casquette).
+export const HAIR_STYLES = {
+  crop: ['....hhhh....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
+  headset: ['...hhhhhh...', '..hhhhhhhh..', '..dssssssd..', '..dsessesd..', '...ssssss...', '....ssss....'],
+  cap: ['...cccccc...', '..cccccccc..', '..dddddddd..', '...sesses...', '...ssssss...', '....ssss....'],
+  long: ['...hhhhhh...', '..hhhhhhhh..', '..hssssssh..', '..hsessesh..', '..hssssssh..', '..h.ssss.h..'],
+  bun: ['.....hh.....', '...hhhhhh...', '..hhsssshh..', '...sesses...', '...ssssss...', '....ssss....'],
+  curly: ['..hh.hh.hh..', '..hhhhhhhh..', '..hhsssshh..', '..hsessesh..', '...ssssss...', '....ssss....'],
 };
 
 export const BODY = ['..cccccccc..', '.dccccccccd.', '.dccccccccd.', '.sccccccccs.', '..cccccccc..'];
