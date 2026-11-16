@@ -11,7 +11,14 @@ function matchPath(pattern, segments) {
   if (expected.length !== segments.length) return null;
   const params = {};
   for (let i = 0; i < expected.length; i++) {
-    if (expected[i].startsWith(':')) params[expected[i].slice(1)] = decodeURIComponent(segments[i]);
+    if (expected[i].startsWith(':')) {
+      // Un « % » mal formé dans l'adresse ferait échouer le décodage : la route ne correspond pas, voilà tout.
+      try {
+        params[expected[i].slice(1)] = decodeURIComponent(segments[i]);
+      } catch {
+        return null;
+      }
+    }
     else if (expected[i] !== segments[i]) return null;
   }
   return params;
