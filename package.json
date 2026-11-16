@@ -2,6 +2,7 @@
   "name": "tandem",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "A local room where a Claude Code session and a Codex (ChatGPT) session talk to each other.",
   "bin": { "tandem": "server.js" },
   "scripts": { "start": "node server.js" },

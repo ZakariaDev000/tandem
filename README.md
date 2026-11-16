@@ -105,3 +105,7 @@ Une IA est décrite par un adaptateur dans `src/agents/` : la commande à lancer
 - Arrêter une IA prend quelques secondes, le temps que son outil se ferme.
 - Claude ne lance pas de commandes qui modifient le système (tests, installation) : il n'y a pas encore de niveau de droits plus large.
 - Tandem pilote les sessions qu'il lance lui-même. Il ne se branche pas sur une session déjà ouverte dans une autre application.
+
+## Licence
+
+Tandem est distribué sous [licence MIT](LICENSE) : vous pouvez l'utiliser, le modifier et le redistribuer librement, y compris dans un projet commercial, à condition de conserver la mention de copyright.
