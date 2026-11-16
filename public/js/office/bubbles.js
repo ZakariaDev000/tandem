@@ -3,8 +3,8 @@
 import { t } from '../i18n/index.js';
 import { displayName } from '../format.js';
 import { BOTH, isAgent } from '../participants.js';
-import { isAtWork, isSeated, isSpeaking } from './actors.js';
-import { HOME, SCENE } from './layout.js';
+import { isAtWork, isSeated, isSpeaking, tableSide } from './actors.js';
+import { SCENE } from './layout.js';
 
 const MAX_LENGTH = 150;
 
@@ -33,7 +33,7 @@ export function createBubbles(overlay, ids, { onPick }) {
   /** Place l'étiquette et la bulle d'un personnage au-dessus de sa tête, et met la bulle à jour. */
   function place(actor, target) {
     const el = elements[actor.id];
-    const headY = isSeated(actor) ? HOME[actor.id].y - 16 : actor.pos.y - 17;
+    const headY = actor.pos.y - (isSeated(actor) ? 16 : 17);
     const left = percent(actor.pos.x, SCENE.width);
     const top = percent(headY, SCENE.height);
     el.tag.style.left = left;
@@ -49,8 +49,10 @@ export function createBubbles(overlay, ids, { onPick }) {
       text = actor.activity || t('office.thinking');
       work = true;
     }
+    // À la table, le nom et l'action de chacun s'écartent de son voisin.
+    const side = tableSide(actor);
     // On ne touche à la bulle que si son contenu change : cette fonction tourne à chaque image.
-    const key = (work ? 'w:' : 's:' + actor.lean + ':' + actor.sayImage + ':') + text;
+    const key = (work ? 'w:' + side + ':' : 's:' + actor.lean + ':' + actor.sayImage + ':') + text;
     if (key !== el.shown) {
       el.shown = key;
       if (text) {
@@ -65,8 +67,12 @@ export function createBubbles(overlay, ids, { onPick }) {
       el.bubble.classList.toggle('work', work);
       el.bubble.classList.toggle('lean-right', !work && actor.lean === 'right');
       el.bubble.classList.toggle('lean-left', !work && actor.lean === 'left');
+      el.bubble.classList.toggle('side-left', work && side === 'left');
+      el.bubble.classList.toggle('side-right', work && side === 'right');
       el.bubble.classList.toggle('show', !!text);
     }
+    el.tag.classList.toggle('side-left', side === 'left');
+    el.tag.classList.toggle('side-right', side === 'right');
     el.tag.classList.toggle('target', isAgent(actor.id) && (target === actor.id || target === BOTH));
   }
 

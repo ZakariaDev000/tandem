@@ -175,6 +175,11 @@ body {
   box-shadow: none;
 }
 .bubble.work::after { display: none; }
+/* À la table de réunion, les étiquettes des deux voisins s'écartent l'une de l'autre. */
+.tag.side-left { transform: translate(-72%, -100%); }
+.tag.side-right { transform: translate(-28%, -100%); }
+.bubble.work.side-left { transform: translate(calc(-100% + 16px), -100%); }
+.bubble.work.side-right { transform: translate(-16px, -100%); }
 
 /* ---------- Chat ---------- */
 .chat {
