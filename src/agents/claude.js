@@ -66,7 +66,11 @@ module.exports = {
         else if (block.type === 'text' && block.text.trim()) turn.lastText = block.text;
       }
     } else if (event.type === 'result') {
-      if (event.is_error || event.subtype !== 'success') turn.failure = event.result || event.subtype || 'unknown error';
+      if (event.is_error || event.subtype !== 'success') {
+        turn.failure = event.result || event.subtype || 'unknown error';
+        // Le texte d'erreur arrive aussi comme un message de l'IA : sans cela, il passerait pour sa réponse.
+        turn.lastText = null;
+      }
       else turn.finalText = event.result;
     }
   },
