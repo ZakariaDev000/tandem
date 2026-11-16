@@ -15,6 +15,7 @@ module.exports = {
   WORKSPACES_DIR: path.join(DATA_DIR, 'workspaces'),
   MEDIA_DIR: path.join(DATA_DIR, 'media'),
   ATTACHMENTS_DIR: path.join(DATA_DIR, 'attachments'),
+  SNAPSHOTS_DIR: path.join(DATA_DIR, 'snapshots'),
   // Intervalle entre deux vérifications de mise à jour.
   UPDATE_CHECK_MINUTES: Number(process.env.TANDEM_UPDATE_MINUTES) || 30,
 };

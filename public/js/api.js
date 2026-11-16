@@ -32,6 +32,9 @@ export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`)
 export const answerApproval = (roomId, requestId, decision) => request('POST', `/api/rooms/${roomId}/approvals/${requestId}`, { decision });
 export const revokeAllowed = (roomId, ruleId) => request('DELETE', `/api/rooms/${roomId}/allowed/${ruleId}`);
 
+/** Le détail d'un fichier changé par un message, désigné par sa place dans la liste du message. */
+export const fileChange = (roomId, messageId, index) => request('GET', `/api/rooms/${roomId}/messages/${encodeURIComponent(messageId)}/changes/${index}`);
+
 export const saveSettings = (changes) => request('POST', '/api/settings', changes);
 export const checkForUpdate = () => request('POST', '/api/update/check');
 export const applyUpdate = () => request('POST', '/api/update/apply');

@@ -12,6 +12,7 @@ import { isBusy } from './room-state.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
 import { createAllowedList } from './chat/allowed.js';
+import { initChanges } from './chat/changes.js';
 import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
 import { attachedImages, attachmentNames } from './chat/message-attachments.js';
@@ -35,6 +36,7 @@ const roomList = createRoomList({ store, unread, onSelect: select, reveal: () =>
 const header = createHeader({ store });
 const thread = createThread({ store });
 const allowed = createAllowedList({ store });
+initChanges({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
 // `notifier.notify({ title, body, roomId })` sert à tout module qui doit attirer l'attention de la personne.
