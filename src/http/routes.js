@@ -1,8 +1,10 @@
 // Les routes de l'API : chacune traduit une demande de la page en un appel aux services.
+const { PROMPT_PATH } = require('../approvals');
 const { AppError } = require('../errors');
 const { pickFolder } = require('../folderPicker');
 const { toPublic } = require('../store');
 const { createAttachmentRoutes } = require('./attachmentRoutes');
+const { serveMcp } = require('./mcp');
 const { readJson, sendJson } = require('./respond');
 const { serveMedia } = require('./static');
 
@@ -10,7 +12,7 @@ const { serveMedia } = require('./static');
  * Renvoie la table des routes. Dans un chemin, « :nom » capture un segment.
  * Un gestionnaire reçoit { req, res, params } et, pour les routes d'un salon, `room`.
  */
-function createRoutes({ store, hub, conductor, agents, settings, updater, attachments }) {
+function createRoutes({ store, hub, conductor, agents, settings, updater, attachments, approvals }) {
   /** Enveloppe une route de salon : résout le salon, ou répond qu'il n'existe plus. */
   const withRoom = (handler) => (context) => {
     const room = store.get(context.params.roomId);
@@ -18,6 +20,12 @@ function createRoutes({ store, hub, conductor, agents, settings, updater, attach
     return handler({ ...context, room });
   };
   const ok = (res) => sendJson(res, 200, { ok: true });
+  /** Le guichet d'un tour : le serveur MCP où une IA dépose ses demandes d'autorisation. */
+  const permissionPrompt = ({ req, res, params }) => {
+    const tool = approvals.toolOf(params.token);
+    if (!tool) throw new AppError(404, 'not_found', 'Not found.');
+    return serveMcp(req, res, { name: 'tandem', tools: [tool] });
+  };
   // Change à chaque démarrage : une page restée ouverte sait ainsi que le serveur a été relancé.
   const startedAt = Date.now();
 
@@ -83,6 +91,20 @@ function createRoutes({ store, hub, conductor, agents, settings, updater, attach
       hub.broadcast('room-deleted', { id: room.id });
       ok(res);
     })],
+
+    ['POST', '/api/rooms/:roomId/approvals/:requestId', withRoom(async ({ req, res, params, room }) => {
+      const { decision } = await readJson(req);
+      conductor.answer(room, params.requestId, decision);
+      ok(res);
+    })],
+
+    ['DELETE', '/api/rooms/:roomId/allowed/:ruleId', withRoom(({ res, params, room }) => {
+      approvals.revoke(room, params.ruleId);
+      ok(res);
+    })],
+
+    ['GET', `${PROMPT_PATH}/:token`, permissionPrompt],
+    ['POST', `${PROMPT_PATH}/:token`, permissionPrompt],
   ];
 }
 

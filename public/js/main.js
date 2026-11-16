@@ -7,6 +7,7 @@ import { actionText } from './format.js';
 import { AGENT_IDS, SYSTEM } from './participants.js';
 import { createStore } from './store.js';
 import { createOffice } from './office/index.js';
+import { createAllowedList } from './chat/allowed.js';
 import { createComposer } from './chat/composer.js';
 import { createHeader } from './chat/header.js';
 import { attachedImages, attachmentNames } from './chat/message-attachments.js';
@@ -22,6 +23,7 @@ const office = createOffice(byId('scene'), byId('overlay'));
 const tabs = createRoomTabs({ store, onSelect: select });
 const header = createHeader({ store });
 const thread = createThread({ store });
+const allowed = createAllowedList({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
 
@@ -40,6 +42,7 @@ function select(id) {
   office.reset();
   tabs.render();
   header.render();
+  allowed.render();
   thread.render();
   syncOffice();
   composer.showRoom();
@@ -87,6 +90,7 @@ subscribe({
     tabs.render();
     if (room.id !== store.currentId) return;
     header.render();
+    allowed.render();
     thread.renderLive();
     syncOffice();
     thread.scrollDown();

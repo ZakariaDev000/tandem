@@ -26,6 +26,9 @@ export const deleteRoom = (roomId) => request('DELETE', `/api/rooms/${roomId}`);
 export const sendMessage = (roomId, { to, text, parallel, attachments }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel, attachments });
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });
 export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`);
+/** Répond à une demande d'autorisation : 'allow', 'always' (pour toujours dans ce salon) ou 'refuse'. */
+export const answerApproval = (roomId, requestId, decision) => request('POST', `/api/rooms/${roomId}/approvals/${requestId}`, { decision });
+export const revokeAllowed = (roomId, ruleId) => request('DELETE', `/api/rooms/${roomId}/allowed/${ruleId}`);
 
 export const saveSettings = (changes) => request('POST', '/api/settings', changes);
 export const checkForUpdate = () => request('POST', '/api/update/check');

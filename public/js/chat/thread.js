@@ -1,11 +1,14 @@
-// Le fil de la conversation du salon affiché, avec la ligne « en train de… » tout en bas.
+// Le fil de la conversation du salon affiché, avec tout en bas ce qui est en cours :
+// les demandes d'autorisation, puis la ligne « en train de… » de chaque agent.
 import { t } from '../i18n/index.js';
 import { byId } from '../dom.js';
 import { actionText, displayName } from '../format.js';
+import { createApprovals } from './approval.js';
 import { messageElement } from './message.js';
 
 export function createThread({ store }) {
   const thread = byId('thread');
+  const approvals = createApprovals({ store });
 
   function scrollDown() {
     thread.scrollTop = thread.scrollHeight;
@@ -25,8 +28,12 @@ export function createThread({ store }) {
   /** Montre ce que fait chaque agent en cours, tout en bas du fil : les nouveaux messages passent au-dessus. */
   function renderLive() {
     for (const row of thread.querySelectorAll('.live')) row.remove();
+    approvals.place(thread);
     const room = store.current();
-    if (room) thread.append(...room.running.map((agentId) => liveRow(agentId, room.id)));
+    if (!room) return;
+    // Un agent qui attend une réponse ne travaille pas : sa demande tient lieu de ligne.
+    const asking = room.approvals.map((request) => request.agent);
+    thread.append(...room.running.filter((agentId) => !asking.includes(agentId)).map((agentId) => liveRow(agentId, room.id)));
   }
 
   function render() {

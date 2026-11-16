@@ -62,6 +62,7 @@ body {
 .rooms button[aria-current="true"] { border-color: var(--ink); color: var(--ink); background: var(--paper); }
 .rooms .dot { width: 8px; height: 8px; background: var(--line-2); }
 .rooms .dot.on { background: #3fae5a; animation: blink 1s steps(2) infinite; }
+.rooms .dot.ask { background: #e7a13a; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0.35; } }
 
 .btn {
@@ -240,6 +241,15 @@ body {
 .sys { align-self: center; font: 12px var(--mono); color: var(--ink-2); padding: 4px 10px; border: 2px dashed var(--line-2); text-align: center; max-width: 100%; overflow-wrap: anywhere; }
 .sys.error { color: var(--danger); border-color: var(--danger); }
 .sys.done { color: #1f6b34; border-color: #3fae5a; border-style: solid; }
+.approval .body { padding: 8px 10px; border: 2px solid var(--ink); background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.approval .note { margin: 4px 0 0; }
+.approval pre { margin: 6px 0; padding: 8px 10px; max-height: 180px; overflow-y: auto; background: var(--ink); color: #f6efe2; font: 12px/1.45 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.approval-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.allowed { padding: 6px 14px; border-bottom: 2px solid var(--line); font: 11px var(--mono); color: var(--ink-2); }
+.allowed summary { cursor: pointer; }
+.allowed ul { margin: 6px 0 2px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+.allowed li { display: flex; align-items: center; gap: 6px; }
+.allowed code { flex: 1; min-width: 0; padding: 2px 6px; background: var(--paper); border: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .live { font: 12px var(--mono); color: var(--ink-2); display: flex; gap: 8px; align-items: center; padding-left: 40px; min-width: 0; }
 .live span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dots { display: inline-flex; gap: 3px; flex: none; }
@@ -346,5 +356,5 @@ legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dots i, .rooms .dot.on { animation: none; }
+  .dots i, .rooms .dot.on, .rooms .dot.ask { animation: none; }
 }

@@ -19,6 +19,7 @@ export function actionText(action) {
 export function systemText(message) {
   if (message.code === 'stopped') return t('system.stopped', { name: displayName(message.agent) });
   if (message.code === 'failed') return t('system.failed', { name: displayName(message.agent), detail: message.detail || '' });
+  if (message.code === 'approval') return t('system.approval.' + message.decision, { name: displayName(message.agent), detail: message.detail });
   return message.text || '';
 }
 
