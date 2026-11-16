@@ -38,10 +38,10 @@ function createRoutes({ store, hub, conductor, agents }) {
     }],
 
     ['POST', '/api/rooms/:roomId/messages', withRoom(async ({ req, res, room }) => {
-      const { to, text } = await readJson(req);
+      const { to, text, parallel } = await readJson(req);
       const trimmed = String(text || '').trim();
       if (!trimmed) throw new AppError(400, 'empty_message', 'The message is empty.');
-      conductor.post(room, { to, text: trimmed });
+      conductor.post(room, { to, text: trimmed, parallel });
       ok(res);
     })],
 

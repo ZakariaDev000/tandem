@@ -14,22 +14,19 @@ export function createThread({ store }) {
   // Une image qui finit de charger allonge le fil : on reste en bas.
   const element = (message) => messageElement(message, { onImageLoad: scrollDown });
 
-  /** Montre ce que fait l'agent en cours, ou retire la ligne si personne ne travaille. */
+  function liveRow(agentId, roomId) {
+    const row = document.createElement('div');
+    row.className = 'live';
+    row.innerHTML = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span></span>';
+    row.lastChild.textContent = displayName(agentId) + ' : ' + (actionText(store.liveAction(roomId, agentId)) || t('office.thinking'));
+    return row;
+  }
+
+  /** Montre ce que fait chaque agent en cours, tout en bas du fil : les nouveaux messages passent au-dessus. */
   function renderLive() {
+    for (const row of thread.querySelectorAll('.live')) row.remove();
     const room = store.current();
-    let row = thread.querySelector('.live');
-    if (!room || !room.running) {
-      if (row) row.remove();
-      return;
-    }
-    if (!row) {
-      row = document.createElement('div');
-      row.className = 'live';
-      row.innerHTML = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span></span>';
-    }
-    // Toujours remise à la fin : les nouveaux messages passent au-dessus.
-    thread.append(row);
-    row.lastChild.textContent = displayName(room.running) + ' : ' + (actionText(store.liveAction(room.id)) || t('office.thinking'));
+    if (room) thread.append(...room.running.map((agentId) => liveRow(agentId, room.id)));
   }
 
   function render() {

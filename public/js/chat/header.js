@@ -5,7 +5,7 @@ import { byId } from '../dom.js';
 import { displayName } from '../format.js';
 import { USER, isAgent } from '../participants.js';
 
-const isBusy = (room) => !!room.running || room.queue.length > 0;
+const isBusy = (room) => room.running.length > 0 || room.queue.length > 0;
 
 function folderLabel(room) {
   if (room.ownFolder) return t('room.noFolder');
@@ -17,7 +17,9 @@ function folderLabel(room) {
 function roomStatus(room) {
   const last = room.messages[room.messages.length - 1];
   if (room.stopping) return { text: t('status.stopping') };
-  if (room.running) return { text: t('status.working', { name: displayName(room.running) }), tone: room.running };
+  // Un agent seul donne sa couleur à l'étiquette ; à deux, elle reste neutre.
+  if (room.running.length === 1) return { text: t('status.working', { name: displayName(room.running[0]) }), tone: room.running[0] };
+  if (room.running.length > 1) return { text: t('status.workingTogether', { names: room.running.map(displayName).join(' + ') }) };
   if (room.paused && room.queue.length) return { text: t('status.paused') };
   // Le dernier mot est celui d'un agent qui s'adresse à la personne : ils ont fini entre eux.
   if (last && isAgent(last.from) && last.to === USER) return { text: t('status.done'), tone: 'done' };

@@ -40,6 +40,12 @@ Pendant ce temps, la page montre qui travaille, ce qu'il fait (fichier lu, comma
 
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
+### Aux deux : l'une après l'autre, ou en parallèle
+
+Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'autre** : la seconde lit la réponse de la première, et elles ne modifient jamais les mêmes fichiers au même moment.
+
+L'interrupteur **En parallèle** les fait répondre **en même temps**, sans se lire. C'est utile pour comparer deux avis indépendants. Évitez-le pour un travail sur les mêmes fichiers : rien n'empêche alors les deux IA de modifier le même fichier.
+
 ## Droits sur vos fichiers
 
 À la création d'un salon, vous choisissez ce que les IA peuvent faire dans le dossier de travail :

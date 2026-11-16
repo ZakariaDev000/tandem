@@ -9,11 +9,15 @@ export function createComposer({ store, onTargetChange }) {
   const form = byId('composer');
   const input = byId('input');
   const targetButtons = form.querySelectorAll('.targets button');
+  const parallelSwitch = byId('parallel-switch');
+  const parallelBox = byId('parallel');
   let target = BOTH;
 
   function setTarget(next) {
     target = next;
     for (const button of targetButtons) button.setAttribute('aria-checked', String(button.dataset.to === next));
+    // Répondre en parallèle n'a de sens qu'en écrivant aux deux.
+    parallelSwitch.hidden = next !== BOTH;
     onTargetChange(next);
   }
 
@@ -31,7 +35,7 @@ export function createComposer({ store, onTargetChange }) {
     input.value = '';
     autosize();
     try {
-      await api.sendMessage(roomId, { to: target, text });
+      await api.sendMessage(roomId, { to: target, text, parallel: target === BOTH && parallelBox.checked });
     } catch (err) {
       // Le texte n'est pas parti : on le rend pour ne pas le perdre.
       input.value = text;

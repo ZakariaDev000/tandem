@@ -22,12 +22,12 @@ const header = createHeader({ store });
 const thread = createThread({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
 
-/** Dans le bureau, seul l'agent dont c'est le tour dans le salon affiché travaille. */
+/** Dans le bureau, travaillent les agents qui répondent dans le salon affiché : un seul, ou les deux en parallèle. */
 function syncOffice() {
   const room = store.current();
   for (const id of AGENT_IDS) {
-    const working = !!room && room.running === id;
-    office.setWorking(id, working, working ? actionText(store.liveAction(room.id)) : '');
+    const working = !!room && room.running.includes(id);
+    office.setWorking(id, working, working ? actionText(store.liveAction(room.id, id)) : '');
   }
 }
 
@@ -99,7 +99,7 @@ subscribe({
   },
 
   activity({ roomId, agent, action }) {
-    store.setLiveAction(roomId, action);
+    store.setLiveAction(roomId, agent, action);
     if (roomId !== store.currentId) return;
     office.setWorking(agent, true, actionText(action));
     thread.renderLive();

@@ -38,9 +38,9 @@ function recipientLabel(to, reader) {
 
 /**
  * Le message d'un tour : tout ce qui s'est dit dans le salon depuis le dernier tour de cette IA.
- * Renvoie null s'il n'y a rien de nouveau pour elle.
+ * Renvoie null s'il n'y a rien de nouveau pour elle. `alongside` nomme les IA qui répondent en même temps.
  */
-function buildPrompt(room, agentId, { includeRules }) {
+function buildPrompt(room, agentId, { includeRules, alongside = [] }) {
   const fresh = room.messages
     .slice(room.seen[agentId] || 0)
     .filter((message) => message.from !== agentId && message.from !== 'system');
@@ -50,6 +50,11 @@ function buildPrompt(room, agentId, { includeRules }) {
   parts.push('New messages in the room:', '');
   for (const message of fresh) {
     parts.push(`### ${displayName(message.from)} (${recipientLabel(message.to, agentId)})`, message.text, '');
+  }
+  // En parallèle, chaque IA répond sans lire l'autre : autant qu'elle le sache.
+  if (alongside.length) {
+    const others = alongside.map(displayName).join(' and ');
+    parts.push(`${others} is answering this same message at the same time and cannot see your reply yet: answer on your own.`, '');
   }
   // Le rappel évite qu'une IA oublie la balise après une longue réponse.
   parts.push('---', `Your turn. Reminder: end with a final line on its own, [[to: ${otherAgent(agentId)}]] or [[to: ${USER}]].`);

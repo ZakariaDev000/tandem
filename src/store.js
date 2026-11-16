@@ -12,7 +12,7 @@ const RUNTIME_FIELDS = ['running', 'queue', 'paused', 'stopping'];
 const blankPerAgent = (value) => Object.fromEntries(AGENT_IDS.map((id) => [id, value]));
 
 function resetRuntime(room) {
-  room.running = null;
+  room.running = []; // les IA en train de répondre
   room.queue = [];
   room.paused = false;
   room.stopping = false;

@@ -21,7 +21,7 @@ async function request(method, url, body) {
 
 export const createRoom = ({ title, cwd, access }) => request('POST', '/api/rooms', { title, cwd, access });
 export const deleteRoom = (roomId) => request('DELETE', `/api/rooms/${roomId}`);
-export const sendMessage = (roomId, { to, text }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text });
+export const sendMessage = (roomId, { to, text, parallel }) => request('POST', `/api/rooms/${roomId}/messages`, { to, text, parallel });
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });
 export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`);
 

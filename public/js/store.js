@@ -1,5 +1,5 @@
 // L'état des salons : ceux qui existent, celui qui est affiché, et la dernière
-// action en cours de chacun. Rien ici ne touche à la page.
+// action en cours de chaque agent. Rien ici ne touche à la page.
 
 const STORAGE_KEY = 'tandem.room';
 
@@ -20,7 +20,12 @@ function recall() {
 
 export function createStore() {
   const rooms = new Map();
-  const liveActions = new Map(); // dernière action en cours, par salon
+  const liveActions = new Map(); // salon -> dernière action en cours de chaque agent
+
+  function actionsOf(roomId) {
+    if (!liveActions.has(roomId)) liveActions.set(roomId, new Map());
+    return liveActions.get(roomId);
+  }
   let currentId = null;
 
   const newestFirst = () => [...rooms.values()].sort((a, b) => b.createdAt - a.createdAt);
@@ -71,10 +76,10 @@ export function createStore() {
     update(meta) {
       const room = rooms.get(meta.id);
       if (!room) return undefined;
-      const wasRunning = room.running;
       Object.assign(room, meta);
-      // L'action affichée était celle de l'agent précédent.
-      if (wasRunning !== room.running) liveActions.delete(room.id);
+      // Un agent qui a fini son tour n'a plus d'action en cours.
+      const actions = actionsOf(room.id);
+      for (const agentId of actions.keys()) if (!room.running.includes(agentId)) actions.delete(agentId);
       return room;
     },
 
@@ -85,10 +90,10 @@ export function createStore() {
       return room;
     },
 
-    liveAction: (roomId) => liveActions.get(roomId),
+    liveAction: (roomId, agentId) => actionsOf(roomId).get(agentId),
 
-    setLiveAction(roomId, action) {
-      liveActions.set(roomId, action);
+    setLiveAction(roomId, agentId, action) {
+      actionsOf(roomId).set(agentId, action);
     },
   };
 }

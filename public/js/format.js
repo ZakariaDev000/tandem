@@ -23,7 +23,7 @@ export function systemText(message) {
 }
 
 export function recipientLabel(message) {
-  if (message.to === BOTH) return t('to.both');
+  if (message.to === BOTH) return message.parallel ? t('to.bothParallel') : t('to.both');
   if (message.to === USER) return t('to.you');
   return t('to.name', { name: displayName(message.to) });
 }

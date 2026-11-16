@@ -45,6 +45,11 @@
         <button type="button" role="radio" data-to="both" aria-checked="true" data-i18n="target.both">Both</button>
         <button type="button" role="radio" data-to="claude" aria-checked="false">Claude</button>
         <button type="button" role="radio" data-to="chatgpt" aria-checked="false">ChatGPT</button>
+        <label id="parallel-switch" class="switch" data-i18n-title="target.parallelHint" title="Both answer at the same time, without reading each other">
+          <input id="parallel" type="checkbox" role="switch">
+          <span class="track" aria-hidden="true"></span>
+          <span data-i18n="target.parallel">In parallel</span>
+        </label>
       </div>
       <div class="row">
         <textarea id="input" rows="2" data-i18n-placeholder="input.placeholder" data-i18n-aria-label="input.label" placeholder="Explain what you want them to do together" aria-label="Message"></textarea>
