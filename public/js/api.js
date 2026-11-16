@@ -25,6 +25,10 @@ export const sendMessage = (roomId, { to, text, parallel }) => request('POST', `
 export const setPaused = (roomId, paused) => request('POST', `/api/rooms/${roomId}/pause`, { paused });
 export const stopRoom = (roomId) => request('POST', `/api/rooms/${roomId}/stop`);
 
+export const saveSettings = (changes) => request('POST', '/api/settings', changes);
+export const checkForUpdate = () => request('POST', '/api/update/check');
+export const applyUpdate = () => request('POST', '/api/update/apply');
+
 /** Ouvre la fenêtre de choix de dossier du système. Renvoie le chemin, ou null si on annule. */
 export async function pickFolder(prompt) {
   const { path } = await request('POST', '/api/pick-folder', { prompt });
@@ -38,6 +42,8 @@ const EVENT_NAMES = {
   roomDeleted: 'room-deleted',
   message: 'message',
   activity: 'activity',
+  settings: 'settings',
+  update: 'update',
 };
 
 /**

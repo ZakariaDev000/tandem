@@ -84,6 +84,9 @@ body {
 .btn.ghost:hover { color: var(--danger); }
 :focus-visible { outline: 3px solid #e7a13a; outline-offset: 2px; }
 
+.banner { display: flex; align-items: center; gap: 12px; padding: 6px 16px; background: #fbe9c7; border-bottom: 2px solid var(--ink); font: 12px var(--mono); }
+.banner span { flex: 1; min-width: 0; }
+
 /* ---------- Mise en page ---------- */
 .app {
   flex: 1;
@@ -293,6 +296,8 @@ dialog label > span:first-child { display: block; }
 dialog label input[type="text"] { margin-top: 4px; font-weight: 400; }
 .folder { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 .folder input { margin-top: 0 !important; font-family: var(--mono) !important; font-size: 12px !important; }
+dialog label.switch { display: inline-flex; margin: 0 0 8px; font: 600 13px var(--sans); color: var(--ink); }
+.note { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); }
 fieldset { border: 0; padding: 0; margin: 0 0 12px; }
 legend { font: 600 13px var(--sans); padding: 0; margin-bottom: 4px; }
 .radio { font-weight: 400 !important; margin-bottom: 4px !important; display: flex !important; gap: 8px; align-items: center; }

@@ -12,6 +12,7 @@ import { createHeader } from './chat/header.js';
 import { initRoomDialog } from './chat/room-dialog.js';
 import { createRoomTabs } from './chat/tabs.js';
 import { createThread } from './chat/thread.js';
+import { createUpdateUi } from './update.js';
 
 translatePage();
 
@@ -21,6 +22,7 @@ const tabs = createRoomTabs({ store, onSelect: select });
 const header = createHeader({ store });
 const thread = createThread({ store });
 const composer = createComposer({ store, onTargetChange: (target) => office.setTarget(target) });
+const updates = createUpdateUi({ hasDraft: () => composer.hasDraft() });
 
 /** Dans le bureau, travaillent les agents qui répondent dans le salon affiché : un seul, ou les deux en parallèle. */
 function syncOffice() {
@@ -58,7 +60,8 @@ office.onPick((id) => {
 
 subscribe({
   // Envoyé à chaque connexion, donc aussi après une coupure : on repart de la liste complète.
-  hello({ rooms }) {
+  hello({ rooms, ...server }) {
+    updates.onHello(server);
     store.replaceAll(rooms);
     select(store.preferredId());
   },
@@ -97,6 +100,9 @@ subscribe({
       office.deliver(message.from, message.to, message.text, image ? image.url : null);
     }
   },
+
+  settings: (settings) => updates.onSettings(settings),
+  update: (update) => updates.onUpdate(update),
 
   activity({ roomId, agent, action }) {
     store.setLiveAction(roomId, agent, action);

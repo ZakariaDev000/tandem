@@ -8,9 +8,12 @@ module.exports = {
   // L'appli pilote des outils qui écrivent sur le disque : elle n'écoute que sur cette machine.
   HOST: '127.0.0.1',
   PORT: Number(process.env.PORT) || 3210,
+  ROOT_DIR,
   PUBLIC_DIR: path.join(ROOT_DIR, 'public'),
   DATA_DIR,
   ROOMS_DIR: path.join(DATA_DIR, 'rooms'),
   WORKSPACES_DIR: path.join(DATA_DIR, 'workspaces'),
   MEDIA_DIR: path.join(DATA_DIR, 'media'),
+  // Intervalle entre deux vérifications de mise à jour.
+  UPDATE_CHECK_MINUTES: Number(process.env.TANDEM_UPDATE_MINUTES) || 30,
 };

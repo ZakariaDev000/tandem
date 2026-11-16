@@ -46,6 +46,16 @@ Quand vous écrivez aux deux IA, elles répondent par défaut **l'une après l'a
 
 L'interrupteur **En parallèle** les fait répondre **en même temps**, sans se lire. C'est utile pour comparer deux avis indépendants. Évitez-le pour un travail sur les mêmes fichiers : rien n'empêche alors les deux IA de modifier le même fichier.
 
+## Mises à jour
+
+Installé avec `git clone`, Tandem se met à jour tout seul. Au démarrage, puis toutes les 30 minutes, il regarde si la branche `main` du dépôt a avancé. Si oui, il attend qu'aucune IA ne travaille, récupère la nouvelle version, se relance, et la page se recharge.
+
+- **Désactiver** : dans les réglages (bouton ⚙), décochez « Installer les mises à jour automatiquement ». Un bandeau vous prévient alors des nouvelles versions, avec un bouton pour les installer.
+- **Votre travail est protégé** : Tandem n'avance que s'il n'y a rien à fusionner. Une copie dont vous avez modifié les fichiers, qui a ses propres commits ou qui est sur une autre branche que `main` n'est jamais touchée ; faites alors `git pull` vous-même.
+- **Sans git** : une copie téléchargée en zip ne se met pas à jour. Téléchargez la nouvelle version à la main.
+
+Avec la mise à jour automatique, le code publié sur `main` s'exécute sur votre machine sans relecture de votre part. Désactivez-la si vous préférez lire les changements avant de les installer.
+
 ## Droits sur vos fichiers
 
 À la création d'un salon, vous choisissez ce que les IA peuvent faire dans le dossier de travail :
@@ -69,7 +79,8 @@ Tout reste sur votre machine, dans le dossier `data/` :
 
 - `data/rooms/` : les salons et leurs conversations ;
 - `data/media/` : une copie de chaque image créée ;
-- `data/workspaces/` : les dossiers des salons sans projet.
+- `data/workspaces/` : les dossiers des salons sans projet ;
+- `data/settings.json` : vos réglages.
 
 Ce dossier est ignoré par git.
 
@@ -81,7 +92,7 @@ Pour ajouter une langue, copiez [`public/js/i18n/en.js`](public/js/i18n/en.js), 
 
 ## Organisation du code
 
-Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité, et [`server.js`](server.js) ne fait que les assembler.
+Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité ; [`src/app.js`](src/app.js) les assemble et [`server.js`](server.js) lance le tout.
 
 | Module | Rôle |
 |---|---|
@@ -92,6 +103,8 @@ Le serveur n'a aucune dépendance. Chaque module a une seule responsabilité, et
 | [`src/agents/`](src/agents) | Un adaptateur par IA (`claude.js`, `codex.js`) et le lanceur commun (`runner.js`). |
 | [`src/images.js`](src/images.js) | Repère les images créées pendant un tour et en garde une copie. |
 | [`src/events.js`](src/events.js) | Diffusion en direct vers la page (Server-Sent Events). |
+| [`src/updater.js`](src/updater.js) | Vérifie et installe les mises à jour ; [`src/supervisor.js`](src/supervisor.js) relance l'appli ensuite. |
+| [`src/settings.js`](src/settings.js) | Les réglages de l'installation. |
 | [`src/http/`](src/http) | Contrôle d'accès, routes de l'API, fichiers de la page. |
 
 La page est écrite en modules JavaScript natifs, sans outil de construction, dans [`public/js/`](public/js) : le bureau animé (`office/`), la conversation (`chat/`), les traductions (`i18n/`) et le lien avec le serveur (`api.js`).

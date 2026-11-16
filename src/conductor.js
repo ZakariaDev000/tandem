@@ -68,6 +68,11 @@ class Conductor {
     for (const turn of this.#turnsOf(room).values()) turn.stop();
   }
 
+  /** Vrai tant qu'une IA répond ou attend son tour, dans n'importe quel salon. */
+  isBusy() {
+    return this.#store.all().some((room) => room.running.length > 0 || room.queue.length > 0);
+  }
+
   stopAll() {
     for (const turns of this.#turns.values()) for (const turn of turns.values()) turn.stop();
   }

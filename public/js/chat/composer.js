@@ -63,5 +63,9 @@ export function createComposer({ store, onTargetChange }) {
     focus() {
       input.focus();
     },
+    /** Vrai si un message est en cours d'écriture. */
+    hasDraft() {
+      return input.value.trim().length > 0;
+    },
   };
 }

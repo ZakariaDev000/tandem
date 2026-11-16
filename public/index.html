@@ -15,7 +15,13 @@
   </div>
   <nav id="rooms" class="rooms" data-i18n-aria-label="rooms.label" aria-label="Rooms"></nav>
   <button id="new-room" class="btn" data-i18n="room.new">+ New room</button>
+  <button id="open-settings" class="btn ghost" data-i18n-title="settings.title" data-i18n-aria-label="settings.title" title="Settings" aria-label="Settings">⚙</button>
 </header>
+
+<div id="update-banner" class="banner" role="status" hidden>
+  <span id="update-banner-text"></span>
+  <button id="update-banner-action" class="btn small" hidden></button>
+</div>
 
 <main id="app" class="app">
   <section class="stage" data-i18n-aria-label="office.label" aria-label="Office">
@@ -86,6 +92,23 @@
     <div class="actions">
       <button type="button" id="f-cancel" class="btn" data-i18n="dialog.cancel">Cancel</button>
       <button type="submit" class="btn primary" data-i18n="dialog.create">Create room</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="settings-dialog">
+  <form method="dialog">
+    <h2 data-i18n="settings.title">Settings</h2>
+    <label class="switch">
+      <input id="auto-update" type="checkbox" role="switch">
+      <span class="track" aria-hidden="true"></span>
+      <span data-i18n="settings.autoUpdate">Install updates automatically</span>
+    </label>
+    <p class="note" data-i18n="settings.autoUpdateNote">New versions are installed when no AI is working, then Tandem restarts.</p>
+    <p id="update-status" class="note"></p>
+    <div class="actions">
+      <button type="button" id="update-check" class="btn" data-i18n="settings.checkNow">Check now</button>
+      <button type="submit" class="btn primary" data-i18n="settings.close">Close</button>
     </div>
   </form>
 </dialog>

@@ -17,8 +17,8 @@ function matchPath(pattern, segments) {
   return params;
 }
 
-function createHttpServer({ config, store, hub, conductor, agents }) {
-  const routes = createRoutes({ store, hub, conductor, agents });
+function createHttpServer({ config, ...services }) {
+  const routes = createRoutes(services);
   const allowedHosts = new Set([`127.0.0.1:${config.PORT}`, `localhost:${config.PORT}`]);
 
   return http.createServer(async (req, res) => {

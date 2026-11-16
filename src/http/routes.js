@@ -9,7 +9,7 @@ const { serveMedia } = require('./static');
  * Renvoie la table des routes. Dans un chemin, « :nom » capture un segment.
  * Un gestionnaire reçoit { req, res, params } et, pour les routes d'un salon, `room`.
  */
-function createRoutes({ store, hub, conductor, agents }) {
+function createRoutes({ store, hub, conductor, agents, settings, updater }) {
   /** Enveloppe une route de salon : résout le salon, ou répond qu'il n'existe plus. */
   const withRoom = (handler) => (context) => {
     const room = store.get(context.params.roomId);
@@ -17,14 +17,28 @@ function createRoutes({ store, hub, conductor, agents }) {
     return handler({ ...context, room });
   };
   const ok = (res) => sendJson(res, 200, { ok: true });
+  // Change à chaque démarrage : une page restée ouverte sait ainsi que le serveur a été relancé.
+  const startedAt = Date.now();
 
   return [
     ['GET', '/api/events', ({ req, res }) => {
       const installed = Object.fromEntries([...agents.values()].map((agent) => [agent.id, !!agent.binary]));
-      hub.subscribe(req, res, { rooms: store.all().map(toPublic), agents: installed });
+      hub.subscribe(req, res, { rooms: store.all().map(toPublic), agents: installed, settings: settings.all(), update: updater.state, startedAt });
     }],
 
     ['GET', '/api/media/:roomId/:file', ({ res, params }) => serveMedia(res, store.mediaDirOf(params.roomId), params.file)],
+
+    ['POST', '/api/settings', async ({ req, res }) => {
+      const saved = settings.update(await readJson(req));
+      hub.broadcast('settings', saved);
+      // Passer en automatique installe tout de suite une mise à jour qui attendait.
+      if (saved.autoUpdate) updater.apply();
+      sendJson(res, 200, saved);
+    }],
+
+    ['POST', '/api/update/check', async ({ res }) => sendJson(res, 200, await updater.check())],
+
+    ['POST', '/api/update/apply', async ({ res }) => sendJson(res, 200, await updater.apply())],
 
     ['POST', '/api/pick-folder', async ({ req, res }) => {
       const { prompt } = await readJson(req);
