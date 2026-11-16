@@ -4,6 +4,8 @@ Un salon local où une session **Claude Code** et une session **Codex** (ChatGPT
 
 Tout se passe dans une page web servie depuis votre machine : la liste des salons à gauche, un petit bureau animé en pixels au centre, la conversation complète à droite.
 
+![Claude a ajouté une section au site d'une boulangerie, ChatGPT l'a relue : la conversation complète à droite, le bureau animé au centre](docs/tandem-office.png)
+
 ## Ce qu'il faut
 
 - **Node.js 20** ou plus récent. Aucune dépendance à installer.
@@ -42,6 +44,10 @@ Dans la conversation, chaque bloc de code a un bouton « Copier » (il apparaît
 
 Vous pouvez mettre en pause, arrêter l'IA en cours, ou écrire en plein échange.
 
+Ici, Claude et ChatGPT ont été sollicités en même temps : ils travaillent côte à côte à la table de réunion.
+
+![Les deux IA assises à la table de réunion pendant qu'elles répondent en parallèle](docs/tandem-parallel.png)
+
 ### Joindre des fichiers
 
 Pour partir d'une capture d'écran, d'une maquette ou d'un document, déposez un ou plusieurs fichiers sur la conversation, choisissez-les avec le bouton trombone, ou collez une image. Ils partent avec votre message, qui peut ne contenir qu'eux : jusqu'à 10 fichiers par message, de 25 Mo chacun au plus. Les images s'affichent dans la conversation, les autres fichiers s'y téléchargent.
@@ -51,6 +57,8 @@ Les fichiers joints sont gardés dans le dossier de données de Tandem, jamais d
 ### Voir ce qu'une IA a modifié
 
 Sous chaque réponse d'une IA qui a touché à des fichiers, un bouton du type « 3 fichiers modifiés +12 −4 » ouvre le détail : la liste des fichiers et, pour chacun, les lignes ajoutées et retirées pendant ce tour.
+
+![Le détail des fichiers modifiés par Claude pendant un tour, ligne par ligne](docs/tandem-changes.png)
 
 Pour cela, Tandem relève le dossier de travail avant et après chaque tour, avec `git`, dans un dépôt privé rangé dans `data/snapshots/`. Votre propre dépôt (index, branche, commits) n'est jamais touché, et un dossier qui n'est pas un dépôt git convient aussi. Sans `git` sur la machine, les réponses s'affichent simplement sans ce détail.
 
@@ -76,6 +84,8 @@ La suppression d'un salon reste dans l'en-tête de la conversation (bouton ✕).
 ### Thème clair ou sombre
 
 La page suit le thème de votre système. Pour en imposer un, ouvrez les réglages (bouton ⚙) et choisissez « Clair » ou « Sombre » ; le navigateur s'en souvient. Le bureau en pixels garde ses couleurs dans les deux thèmes.
+
+![La même page en thème sombre](docs/tandem-dark.png)
 
 ### Être prévenu quand c'est votre tour
 
@@ -116,9 +126,11 @@ Dans un salon où il peut lire et modifier, Claude fait seul ce qui est sans ris
 - **Toujours autoriser dans ce salon** : cette fois, puis chaque fois que Claude redemandera exactement la même chose dans ce salon, sans nouvelle carte. Une autre commande, même voisine, sera redemandée. La liste de ce que vous avez autorisé ainsi s'affiche sous le titre du salon ; le ✕ retire une autorisation.
 - **Refuser** : Claude est prévenu et continue sans cette action.
 
-Votre réponse laisse une ligne dans la conversation. Tant qu'une demande attend, l'en-tête du salon le dit et son onglet clignote en orange. La pause ne répond pas à votre place ; arrêter le salon ou le supprimer annule la demande.
+Votre réponse laisse une ligne dans la conversation. Tant qu'une demande attend, l'en-tête du salon le dit et sa pastille clignote en orange dans la liste des salons. La pause ne répond pas à votre place ; arrêter le salon ou le supprimer annule la demande.
 
 ChatGPT ne pose pas de question : le bac à sable de Codex décide pour lui.
+
+![Claude demande la permission de lancer une commande qui écrit dans style.css](docs/tandem-approval.png)
 
 ## Sécurité
 
