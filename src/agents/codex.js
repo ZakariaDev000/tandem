@@ -33,8 +33,11 @@ module.exports = {
   // Codex n'a pas d'option pour des consignes système : elles ouvrent le premier message.
   rulesInFirstPrompt: true,
   generatesImages: true,
+  // Pas établi : à l'essai, Codex a décodé l'image jointe avec un script au lieu de la regarder.
+  viewsImageFiles: false,
 
   buildArgs({ session, access, cwd }) {
+    // Les deux bacs à sable lisent tout le disque : rien à ouvrir pour les fichiers joints.
     const sandbox = access === 'read' ? 'read-only' : 'workspace-write';
     // La reprise d'une session n'accepte pas l'option « -s » : le bac à sable passe par la configuration.
     if (session) {

@@ -35,11 +35,15 @@ module.exports = {
   // Claude reçoit les consignes du salon comme consignes système, à chaque tour.
   rulesInFirstPrompt: false,
   generatesImages: false,
+  // Son outil de lecture lui montre une image dont on lui donne le chemin.
+  viewsImageFiles: true,
 
-  buildArgs({ session, access, rules }) {
+  buildArgs({ session, access, rules, readableDirs = [] }) {
     const args = ['-p', '--output-format', 'stream-json', '--verbose', '--append-system-prompt', rules];
     if (access === 'read') args.push('--disallowedTools', ...WRITE_TOOLS);
     else args.push('--permission-mode', 'acceptEdits');
+    // Claude Code refuse de lire hors du dossier de travail, sauf dans les dossiers qu'on lui ouvre.
+    if (readableDirs.length) args.push('--add-dir', ...readableDirs);
     if (session) return { args: [...args, '--resume', session], session };
     // On choisit nous-mêmes l'identifiant d'une nouvelle session, pour pouvoir la reprendre ensuite.
     const fresh = crypto.randomUUID();
