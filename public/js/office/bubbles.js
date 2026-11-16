@@ -10,7 +10,17 @@ const MAX_LENGTH = 150;
 
 /** Le texte d'une bulle : sans mise en forme, sur une ligne, et court. */
 export function bubbleText(text) {
-  const plain = String(text || '').replace(/```[\s\S]*?```/g, '[code]').replace(/[*_`#>]/g, '').replace(/\s+/g, ' ').trim();
+  const plain = String(text || '')
+    .replace(/```[\s\S]*?```/g, '[code]')
+    // Une bulle n'a pas la place d'un tableau : on retire sa ligne de séparation et ses barres.
+    .replace(/^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/gm, '')
+    .replace(/\s*\|\s*/g, ' · ')
+    .replace(/[*_`#>]/g, '')
+    .replace(/\s+/g, ' ')
+    // Les barres en bord de ligne et entre deux lignes laissent des séparateurs vides.
+    .replace(/(?:\s*·\s*){2,}/g, ' · ')
+    .replace(/^\s*·\s*|\s*·\s*$/g, '')
+    .trim();
   return plain.length > MAX_LENGTH ? plain.slice(0, MAX_LENGTH - 1) + '…' : plain;
 }
 
