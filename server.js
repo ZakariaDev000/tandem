@@ -121,6 +121,20 @@ function loadRooms() {
       r.queue = [];
       r.paused = false;
       rooms.set(r.id, r);
+      // A room without a project keeps its files inside this app's data folder.
+      // If the app was moved, follow it: the stored absolute path is stale, and the
+      // agent sessions were tied to the old folder, so each agent starts a fresh
+      // session and is handed the whole conversation again on its next turn.
+      if (r.ownFolder) {
+        const here = path.join(WORK_DIR, r.id);
+        if (r.cwd !== here) {
+          r.cwd = here;
+          r.sessions = { claude: null, chatgpt: null };
+          r.seen = { claude: 0, chatgpt: 0 };
+          fs.mkdirSync(here, { recursive: true });
+          saveRoom(r);
+        }
+      }
     } catch (e) {
       console.error('Salon illisible :', f, e.message);
     }
